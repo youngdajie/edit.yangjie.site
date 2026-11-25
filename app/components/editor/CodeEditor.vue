@@ -65,6 +65,59 @@ const mdHighlight = HighlightStyle.define([
 	{ tag: tags.punctuation, color: 'var(--cm-faint)' },
 ])
 
+/**
+ * frontmatter 区域统一着色。
+ * Markdown 解析器会把首尾 --- 当成不同语法（首行 meta / 末行 setext 分隔），
+ * 还把 [杂记] 当成链接加下划线，导致颜色杂乱。这里用专用 decoration 接管整块。
+ */
+const frontmatterHighlight = ViewPlugin.fromClass(class {
+	decorations: DecorationSet
+	constructor(v: EditorView) { this.decorations = buildFrontmatter(v) }
+	update(u: ViewUpdate) {
+		if (u.docChanged || u.viewportChanged)
+			this.decorations = buildFrontmatter(u.view)
+	}
+}, { decorations: plugin => plugin.decorations })
+
+function buildFrontmatter(v: EditorView): DecorationSet {
+	const builder = new RangeSetBuilder<Decoration>()
+	const doc = v.state.doc
+	if (doc.lines < 2)
+		return builder.finish()
+	const first = doc.line(1)
+	if (first.text.trim() !== '---')
+		return builder.finish()
+
+	// 找结束的 ---
+	let endLine = 0
+	for (let n = 2; n <= doc.lines; n++) {
+		if (doc.line(n).text.trim() === '---') { endLine = n; break }
+	}
+	if (!endLine)
+		return builder.finish()
+
+	for (let n = 1; n <= endLine; n++) {
+		const line = doc.line(n)
+		const isFence = n === 1 || n === endLine
+		if (isFence) {
+			// 两行分隔符用同一个 class，保证颜色一致
+			builder.add(line.from, line.to, Decoration.mark({ class: 'cm-fm-fence' }))
+			continue
+		}
+		// key: value —— key 用主色，value 用普通文字色，统一不带下划线
+		const colon = line.text.indexOf(':')
+		if (colon > 0) {
+			builder.add(line.from, line.from + colon + 1, Decoration.mark({ class: 'cm-fm-key' }))
+			if (colon + 1 < line.text.length)
+				builder.add(line.from + colon + 1, line.to, Decoration.mark({ class: 'cm-fm-value' }))
+		}
+		else {
+			builder.add(line.from, line.to, Decoration.mark({ class: 'cm-fm-value' }))
+		}
+	}
+	return builder.finish()
+}
+
 /** MDC 语法着色：::block / :inline，跳过代码围栏内部 */
 const mdcHighlight = ViewPlugin.fromClass(class {
 	decorations: DecorationSet
@@ -230,6 +283,7 @@ onMounted(() => {
 		placeholder('从这里开始写。Ctrl+/ 打开 MDC 组件库'),
 		markdown({ base: markdownLanguage, codeLanguages: languages }),
 		syntaxHighlighting(mdHighlight),
+		frontmatterHighlight,
 		mdcHighlight,
 		keymap.of([
 			{ key: 'Mod-s', preventDefault: true, run: () => (cb.value.emit('save'), true) },

@@ -94,6 +94,7 @@ engineStrict: false
 patchedDependencies:
   # 代码高亮的语言包改从本地 shiki 取，不再运行时 import 自 esm.sh
   '@bikariya/shiki': patches/@bikariya__shiki.patch
+  '@nuxt/icon@2.6.3': patches/@nuxt__icon@2.6.3.patch
   # 代码块不将 tab 转为空格；行内代码 props.code 传入原文
   # 这两处直接决定预览里代码块的呈现与博客一致
   '@nuxtjs/mdc': patches/@nuxtjs__mdc.patch

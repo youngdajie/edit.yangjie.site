@@ -85,7 +85,7 @@ function greet(name: string) {
 console.log(greet('小杰'))
 \`\`\`
 
-按 :key{cmd=true code="/"} 打开组件库，按 :key{cmd=true code="s"} 保存草稿。安装依赖可以用 :copy{code="pnpm install"}。
+按 :key{cmd code="/"} 打开组件库，按 :key{cmd code="s"} 保存草稿。安装依赖可以用 :copy{code="pnpm install"}。
 
 行内公式 \$E = mc^2\$ 直接写在句子里，块级公式单独占一段：
 
@@ -105,7 +105,7 @@ graph TD
 ::pics
 ---
 images:
-  - src: https://cdn.jsdmirror.com/cnb/youngdajie/static@main/box/img/post/cover/default_0.webp
+  - src: /sample-cover.svg
     caption: 单张图也可以配说明
 ---
 ::

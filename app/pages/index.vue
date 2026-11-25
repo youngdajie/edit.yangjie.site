@@ -45,7 +45,8 @@ type: tech
 ${SAMPLE_BODY}`
 }
 
-const source = ref(makeSampleDoc())
+// useState 让 SSR 与 CSR 共用同一份初值，避免两处 new Date() 造成水合不一致
+const source = useState('blog-writing:source', () => makeSampleDoc())
 
 const meta = ref<ArticleMeta>(emptyMeta())
 const view = ref<View>('split')
@@ -72,6 +73,46 @@ const previewLoading = ref(false)
 const editorRef = ref<ComponentPublicInstance<EditorHandle> | null>(null)
 const previewHost = ref<HTMLElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
+
+// ---------- 左右分栏可拖拽 ----------
+const SPLIT_KEY = 'clarity-writing:split'
+const bodyRef = ref<HTMLElement | null>(null)
+const splitRatio = ref(0.5)
+let draggingSplit = false
+
+function onSplitDown(e: PointerEvent) {
+	draggingSplit = true
+	;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+	e.preventDefault()
+}
+function onSplitMove(e: PointerEvent) {
+	if (!draggingSplit || !bodyRef.value) return
+	const rect = bodyRef.value.getBoundingClientRect()
+	if (!rect.width) return
+	const ratio = (e.clientX - rect.left) / rect.width
+	splitRatio.value = Math.min(0.8, Math.max(0.2, ratio))
+}
+function onSplitUp(e: PointerEvent) {
+	if (!draggingSplit) return
+	draggingSplit = false
+	;(e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId)
+	if (import.meta.client)
+		localStorage.setItem(SPLIT_KEY, splitRatio.value.toFixed(3))
+}
+function resetSplit() {
+	splitRatio.value = 0.5
+	if (import.meta.client)
+		localStorage.removeItem(SPLIT_KEY)
+}
+
+// ---------- 自定义 tooltip ----------
+const {
+	visible: tipVisible,
+	lines: tipLines,
+	x: tipX,
+	y: tipY,
+	above: tipAbove,
+} = useTooltip()
 
 // ---------- 主题 ----------
 const colorMode = useColorMode()
@@ -260,6 +301,10 @@ onMounted(() => {
 	const savedTheme = localStorage.getItem(THEME_KEY)
 	if (savedTheme === 'dark' || savedTheme === 'light')
 		colorMode.preference = savedTheme
+	// 恢复左右分栏比例
+	const savedSplit = Number.parseFloat(localStorage.getItem(SPLIT_KEY) || '')
+	if (Number.isFinite(savedSplit) && savedSplit >= 0.2 && savedSplit <= 0.8)
+		splitRatio.value = savedSplit
 
 	const firstId = lib.makeId()
 	if (!articles.value.length) {
@@ -529,59 +574,66 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 			<span class="w-brand">blog writing@jie</span>
 			<span class="w-sep" />
 			<div class="w-doc">
-				<strong class="w-doc-title" :title="displayTitle">{{ displayTitle }}</strong>
+				<strong class="w-doc-title" :data-tip="displayTitle">{{ displayTitle }}</strong>
 				<span class="w-doc-sub">{{ savedAt ? `已保存 ${savedAt}` : status }} · {{ wordCount }} 字 · 约 {{ readMinutes }} 分钟</span>
 			</div>
 
 			<span class="w-spacer" />
 
-			<button class="w-icon-btn" :title="isDark ? '切换到浅色' : '切换到深色'" @click="toggleTheme">
-				<Icon :name="isDark ? 'tabler:sun' : 'tabler:moon'" />
+			<!-- 两个图标都渲染，靠 .dark 用 CSS 切换，避免 SSR/CSR 主题值不同导致水合不一致 -->
+			<button class="w-icon-btn w-theme-btn" data-tip="切换主题" @click="toggleTheme">
+				<Icon name="tabler:moon" class="w-theme-light" />
+				<Icon name="tabler:sun" class="w-theme-dark" />
 			</button>
-			<button class="w-icon-btn" title="文章库" @click="showLibrary = !showLibrary">
+			<button class="w-icon-btn" data-tip="文章库" @click="showLibrary = !showLibrary">
 				<Icon name="tabler:books" />
 				<span v-if="articles.length" class="w-badge">{{ articles.length }}</span>
 			</button>
-			<button class="w-icon-btn" title="文章设置" @click="showMeta = !showMeta"><Icon name="tabler:settings" /></button>
-			<button class="w-icon-btn" title="新建文章（设置标题与文件名）" @click="openNewDialog"><Icon name="tabler:file-plus" /></button>
-			<button class="w-icon-btn" title="打开本地 .md" @click="fileInput?.click()"><Icon name="tabler:folder-open" /></button>
+			<button class="w-icon-btn" data-tip="文章设置" @click="showMeta = !showMeta"><Icon name="tabler:settings" /></button>
+			<button class="w-icon-btn w-hide-mobile" data-tip="新建文章（设置标题与文件名）" @click="openNewDialog"><Icon name="tabler:file-plus" /></button>
+			<button class="w-icon-btn w-hide-mobile" data-tip="打开本地 .md" @click="fileInput?.click()"><Icon name="tabler:folder-open" /></button>
 			<input ref="fileInput" type="file" accept=".md,.markdown,text/markdown" hidden @change="openFile">
 
 			<span class="w-sep" />
 
 			<div class="w-segment" role="group" aria-label="视图">
-				<button :class="{ 'is-active': view === 'edit' }" title="只看编辑区" @click="setView('edit')"><Icon name="tabler:pencil" /></button>
-				<button :class="{ 'is-active': view === 'split' }" title="左右对照" @click="setView('split')"><Icon name="tabler:columns-2" /></button>
-				<button :class="{ 'is-active': view === 'preview' }" title="只看预览" @click="setView('preview')"><Icon name="tabler:eye" /></button>
+				<button :class="{ 'is-active': view === 'edit' }" data-tip="只看编辑区" @click="setView('edit')"><Icon name="tabler:pencil" /></button>
+				<button :class="{ 'is-active': view === 'split' }" data-tip="左右对照" @click="setView('split')"><Icon name="tabler:columns-2" /></button>
+				<button :class="{ 'is-active': view === 'preview' }" data-tip="只看预览" @click="setView('preview')"><Icon name="tabler:eye" /></button>
 			</div>
-			<button class="w-publish" title="导出到 content/posts/<年份>/" @click="openExportDialog">
+			<button class="w-publish" data-tip="导出到 content/posts/<年份>/" @click="openExportDialog">
 				<Icon name="tabler:download" /><span>导出 .md</span>
 			</button>
 		</header>
 
 		<!-- ======== 一行 Markdown 工具栏 ======== -->
 		<div class="w-toolbar">
-			<button class="w-tool" title="撤销 (Ctrl+Z)" @click="run(h => h.undo())"><Icon name="tabler:arrow-back-up" /></button>
-			<button class="w-tool" title="重做 (Ctrl+Y)" @click="run(h => h.redo())"><Icon name="tabler:arrow-forward-up" /></button>
+			<button class="w-tool" data-tip="撤销 (Ctrl+Z)" @click="run(h => h.undo())"><Icon name="tabler:arrow-back-up" /></button>
+			<button class="w-tool" data-tip="重做 (Ctrl+Y)" @click="run(h => h.redo())"><Icon name="tabler:arrow-forward-up" /></button>
 			<span class="w-sep" />
 			<button
 				v-for="s in MARKDOWN_SNIPPETS"
 				:key="s.label"
 				class="w-tool"
 				:class="{ 'is-inline': !!s.wrap }"
-				:title="`${s.label} · ${s.syntax}\n${s.desc}`"
+				:data-tip="`${s.label} · ${s.syntax}\n${s.desc}`"
 				@click="insertSnippet(s)"
 			>
 				<Icon :name="s.icon" />
 			</button>
 			<span class="w-spacer" />
-			<button class="w-mdc-trigger" title="打开 MDC 组件库 (Ctrl+/)" @click="openPalette">
+			<button class="w-mdc-trigger" data-tip="打开 MDC 组件库 (Ctrl+/)" @click="openPalette">
 				<Icon name="tabler:box-multiple" /><span>MDC 组件</span><kbd>Ctrl+/</kbd>
 			</button>
 		</div>
 
 		<!-- ======== 编辑 / 预览（占满剩余高度） ======== -->
-		<main class="w-body" :data-view="view">
+		<main
+			ref="bodyRef"
+			class="w-body"
+			:data-view="view"
+			:style="{ '--split': `${splitRatio * 100}%` }"
+		>
 			<section class="w-pane w-pane-editor">
 				<span class="w-pane-tag">Markdown</span>
 				<EditorCodeEditor
@@ -592,6 +644,19 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 					@palette="openPalette"
 				/>
 			</section>
+			<div
+				class="w-resizer"
+				role="separator"
+				aria-orientation="vertical"
+				data-tip="拖动调整左右宽度 · 双击复位"
+				@pointerdown="onSplitDown"
+				@pointermove="onSplitMove"
+				@pointerup="onSplitUp"
+				@pointercancel="onSplitUp"
+				@dblclick="resetSplit"
+			>
+				<span class="w-resizer-grip" />
+			</div>
 			<section class="w-pane w-pane-preview">
 				<span class="w-pane-tag">预览<Icon v-if="previewLoading" name="tabler:loader-2" class="w-spin" /></span>
 				<div ref="previewHost" class="w-preview-host" @scroll="onPreviewScroll">
@@ -610,13 +675,13 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 		<!-- ======== 状态栏 ======== -->
 		<footer class="w-status">
 			<span :class="{ 'is-error': statusError }">{{ status }}</span>
-			<span class="w-status-sep" />
-			<span>{{ wordCount }} 字 · 约 {{ readMinutes }} 分钟</span>
-			<span class="w-status-sep" />
-			<span>导出为 <code>{{ resolvedFileName }}</code></span>
+			<span class="w-status-sep w-hide-mobile" />
+			<span class="w-hide-mobile">{{ wordCount }} 字 · 约 {{ readMinutes }} 分钟</span>
+			<span class="w-status-sep w-hide-mobile" />
+			<span class="w-hide-mobile">导出为 <code>{{ resolvedFileName }}</code></span>
 			<span class="w-spacer" />
-			<button class="w-status-btn" title="复制 Markdown 源码" @click="copySource"><Icon name="tabler:clipboard" /></button>
-			<button class="w-status-btn" title="复制正文 HTML" @click="copyHtml"><Icon name="tabler:code" /></button>
+			<button class="w-status-btn" data-tip="复制 Markdown 源码" @click="copySource"><Icon name="tabler:clipboard" /></button>
+			<button class="w-status-btn" data-tip="复制正文 HTML" @click="copyHtml"><Icon name="tabler:code" /></button>
 			<span class="is-ok"><Icon name="tabler:circle-check" /> 预览与博客同源渲染</span>
 		</footer>
 
@@ -628,7 +693,7 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 						<h2><Icon name="tabler:books" /> 文章库</h2>
 						<p>文章保存在此浏览器本地，新建不会覆盖旧文章</p>
 					</div>
-					<button class="w-icon-btn" title="关闭" @click="showLibrary = false"><Icon name="tabler:x" /></button>
+					<button class="w-icon-btn" data-tip="关闭" @click="showLibrary = false"><Icon name="tabler:x" /></button>
 				</header>
 				<div class="w-drawer-body">
 					<button class="w-new-article" @click="openNewDialog">
@@ -649,7 +714,7 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 								<strong>{{ (splitDocument(article.source).meta.title as string) || article.fileName.replace(/\.md$/i, '') }}</strong>
 								<span>{{ article.updatedAt }} · {{ article.fileName }}</span>
 							</div>
-							<button class="w-article-del" title="删除这篇文章" @click.stop="deleteArticle(article.id)">
+							<button class="w-article-del" data-tip="删除这篇文章" @click.stop="deleteArticle(article.id)">
 								<Icon name="tabler:trash" /><span>删除</span>
 							</button>
 						</div>
@@ -669,7 +734,7 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 						<h2><Icon name="tabler:settings" /> 文章设置</h2>
 						<p>对应文章开头的 frontmatter，改动会实时写回源码</p>
 					</div>
-					<button class="w-icon-btn" title="关闭" @click="showMeta = false"><Icon name="tabler:x" /></button>
+					<button class="w-icon-btn" data-tip="关闭" @click="showMeta = false"><Icon name="tabler:x" /></button>
 				</header>
 				<div class="w-drawer-body">
 					<section class="w-fieldset">
@@ -697,7 +762,7 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 									@blur="applyFileName"
 									@keydown.enter="applyFileName"
 								>
-								<button class="w-now-btn" title="应用文件名" @click="applyFileName"><Icon name="tabler:check" />应用</button>
+								<button class="w-now-btn" data-tip="应用文件名" @click="applyFileName"><Icon name="tabler:check" />应用</button>
 							</div>
 							<small>空格与符号自动转连字符，大小写原样保留；改名后会同步到文章库</small>
 						</div>
@@ -742,14 +807,14 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 							<label>发布日期 <code>date</code></label>
 							<div class="w-datetime">
 								<EditorDateTimePicker :model-value="meta.date" @update:model-value="setDate('date', $event)" />
-								<button class="w-now-btn" title="设为当前时间" @click="setDateNow('date')"><Icon name="tabler:clock" />现在</button>
+								<button class="w-now-btn" data-tip="设为当前时间" @click="setDateNow('date')"><Icon name="tabler:clock" />现在</button>
 							</div>
 						</div>
 						<div class="w-field">
 							<label>更新日期 <code>updated</code></label>
 							<div class="w-datetime">
 								<EditorDateTimePicker :model-value="meta.updated" @update:model-value="setDate('updated', $event)" />
-								<button class="w-now-btn" title="设为当前时间" @click="setDateNow('updated')"><Icon name="tabler:clock" />现在</button>
+								<button class="w-now-btn" data-tip="设为当前时间" @click="setDateNow('updated')"><Icon name="tabler:clock" />现在</button>
 							</div>
 						</div>
 						<small class="w-field-note">点击日期框弹出选择器，写回格式为 YYYY-MM-DD HH:mm:ss</small>
@@ -932,5 +997,20 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 		<Transition name="toast">
 			<div v-if="toast" class="w-toast"><Icon name="tabler:circle-check" />{{ toast }}</div>
 		</Transition>
+
+		<!-- 自定义 tooltip：Teleport 到 body，不受顶栏 overflow 裁剪 -->
+		<Teleport to="body">
+			<Transition name="tip">
+				<div
+					v-if="tipVisible"
+					class="w-tip"
+					:class="{ 'is-above': tipAbove }"
+					:style="{ left: `${tipX}px`, top: `${tipY}px` }"
+				>
+					<strong v-if="tipLines[0]">{{ tipLines[0] }}</strong>
+					<span v-for="(line, i) in tipLines.slice(1)" :key="i">{{ line }}</span>
+				</div>
+			</Transition>
+		</Teleport>
 	</div>
 </template>

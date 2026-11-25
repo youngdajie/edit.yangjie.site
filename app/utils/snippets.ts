@@ -142,8 +142,8 @@ export const SNIPPETS: Snippet[] = [
 	},
 	{
 		label: '快捷键', group: '组件', icon: 'tabler:keyboard',
-		desc: '键盘按键样式', syntax: ':key{cmd=true}',
-		template: '按 :key{cmd=true code="$0k"} 打开命令面板',
+		desc: '键盘按键样式', syntax: ':key{cmd}',
+		template: '按 :key{cmd code="$0k"} 打开命令面板',
 	},
 	{
 		label: '马赛克', group: '组件', icon: 'tabler:eye-off',
