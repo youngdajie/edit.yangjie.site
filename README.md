@@ -15,7 +15,8 @@
 - 左边写 Markdown / MDC，右边实时预览成博客文章的样子
 - 一行工具栏插 Markdown 语法，独立组件库插 MDC（`Ctrl+/`）
 - frontmatter 表单、文章库（浏览器本地）、导出 `.md` 到 `content/posts/<年>/`
-- 深色模式、双向滚动同步，与博客一致的 Shiki / KaTeX / Mermaid 渲染
+- 深色模式、双向滚动同步、可拖拽分栏、移动端适配，与博客一致的 Shiki / KaTeX / Mermaid 渲染
+- **自动保存到浏览器 localStorage**（状态栏显示保存状态与用量），不上传云端 —— 请勿清除本站缓存，写完及时导出 `.md`
 
 ## 开发
 

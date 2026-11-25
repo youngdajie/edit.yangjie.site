@@ -24,6 +24,36 @@ const lib = useArticleLibrary()
 // 模板不会解包嵌套对象里的 ref，取到顶层变量
 const articles = lib.articles
 const currentId = lib.currentId
+const persistFailed = lib.persistFailed
+
+// ---------- 本地存储用量 ----------
+/** 浏览器 localStorage 按 origin 计算，主流浏览器约 5 MB（按 UTF-16 字节估） */
+const STORAGE_QUOTA = 5 * 1024 * 1024
+const storageUsed = ref(0)
+const storageRatio = computed(() => Math.min(1, storageUsed.value / STORAGE_QUOTA))
+const storagePercent = computed(() => Math.round(storageRatio.value * 100))
+const storageNearLimit = computed(() => storageRatio.value >= 0.9)
+/** 写入失败或接近配额时禁止新建，避免文章丢失 */
+const storageFull = computed(() => persistFailed.value || storageNearLimit.value)
+
+function measureStorage() {
+	if (!import.meta.client) return
+	let bytes = 0
+	try {
+		for (let i = 0; i < localStorage.length; i++) {
+			const key = localStorage.key(i)
+			if (!key) continue
+			bytes += (key.length + (localStorage.getItem(key)?.length ?? 0)) * 2
+		}
+	}
+	catch { /* 隐私模式下可能读不到，忽略 */ }
+	storageUsed.value = bytes
+}
+function formatBytes(bytes: number) {
+	return bytes < 1024 * 1024
+		? `${(bytes / 1024).toFixed(1)} KB`
+		: `${(bytes / 1024 / 1024).toFixed(2)} MB`
+}
 
 /** Markdown 基础语法：工具栏一行图标 */
 const MARKDOWN_SNIPPETS = SNIPPETS.filter(s => s.group === '基础')
@@ -58,6 +88,7 @@ const paletteQuery = ref('')
 const paletteCursor = ref(0)
 const showExportDialog = ref(false)
 const exportNameInput = ref('')
+const showAbout = ref(false)
 /** 新建文章弹窗：标题 + .md 命名 */
 const showNewDialog = ref(false)
 const newTitleInput = ref('')
@@ -198,7 +229,14 @@ function setDateNow(field: 'date' | 'updated') {
 interface Prefs { view: View }
 
 function saveDraft() {
-	lib.save({ id: currentArticleId.value, fileName: fileName.value, source: source.value })
+	const ok = lib.save({ id: currentArticleId.value, fileName: fileName.value, source: source.value })
+	measureStorage()
+	if (!ok) {
+		status.value = '本地存储已满，无法保存！请立即导出 .md 并删除旧文章'
+		statusError.value = true
+		showToast('本地存储已满，请及时导出文章')
+		return
+	}
 	savedAt.value = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
 	status.value = `已保存 ${savedAt.value}`
 	statusError.value = false
@@ -222,6 +260,10 @@ function openArticle(id: string) {
 
 /** 打开新建弹窗：先问标题与文件名 */
 function openNewDialog() {
+	if (storageFull.value) {
+		showToast('本地存储已满，请先导出 .md 并删除旧文章')
+		return
+	}
 	newTitleInput.value = ''
 	newNameInput.value = ''
 	newNameTouched.value = false
@@ -247,6 +289,10 @@ function onNewNameBlur() {
 
 /** 确认新建：标题写进 frontmatter，合规文件名直接作为文章库里的文件名 */
 function confirmNewArticle() {
+	if (storageFull.value) {
+		showToast('本地存储已满，无法新建文章')
+		return
+	}
 	const title = newTitleInput.value.trim()
 	const finalName = normalizedNewName.value
 	saveDraft()
@@ -297,6 +343,7 @@ function deleteArticle(id: string) {
 
 onMounted(() => {
 	lib.load()
+	measureStorage()
 	// 恢复主题（color-mode 自己也持久化，这里做双保险）
 	const savedTheme = localStorage.getItem(THEME_KEY)
 	if (savedTheme === 'dark' || savedTheme === 'light')
@@ -360,6 +407,11 @@ watch(source, () => {
 	else
 		loadMetaFromSource()
 
+	// 每次内容变化都主动自动保存（600ms 防抖，避免每个字符都写 localStorage）
+	if (!statusError.value) {
+		status.value = '保存中…'
+		statusError.value = false
+	}
 	if (saveTimer) clearTimeout(saveTimer)
 	saveTimer = setTimeout(saveDraft, 600)
 	if (previewTimer) clearTimeout(previewTimer)
@@ -488,6 +540,7 @@ function onGlobalKey(e: KeyboardEvent) {
 		showLibrary.value = false
 		showExportDialog.value = false
 		showNewDialog.value = false
+		showAbout.value = false
 	}
 }
 
@@ -575,7 +628,7 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 			<span class="w-sep" />
 			<div class="w-doc">
 				<strong class="w-doc-title" :data-tip="displayTitle">{{ displayTitle }}</strong>
-				<span class="w-doc-sub">{{ savedAt ? `已保存 ${savedAt}` : status }} · {{ wordCount }} 字 · 约 {{ readMinutes }} 分钟</span>
+				<span class="w-doc-sub">{{ savedAt ? `已保存 ${savedAt}` : status }}<span class="w-doc-extra"> · {{ wordCount }} 字 · 约 {{ readMinutes }} 分钟</span></span>
 			</div>
 
 			<span class="w-spacer" />
@@ -590,8 +643,9 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 				<span v-if="articles.length" class="w-badge">{{ articles.length }}</span>
 			</button>
 			<button class="w-icon-btn" data-tip="文章设置" @click="showMeta = !showMeta"><Icon name="tabler:settings" /></button>
-			<button class="w-icon-btn w-hide-mobile" data-tip="新建文章（设置标题与文件名）" @click="openNewDialog"><Icon name="tabler:file-plus" /></button>
-			<button class="w-icon-btn w-hide-mobile" data-tip="打开本地 .md" @click="fileInput?.click()"><Icon name="tabler:folder-open" /></button>
+			<button class="w-icon-btn w-hide-mobile" data-tip="关于本站" @click="showAbout = true"><Icon name="tabler:info-circle" /></button>
+			<button class="w-icon-btn w-hide-mobile" :data-tip="storageFull ? '本地存储已满，请先导出旧文章' : '新建文章'" :disabled="storageFull" @click="openNewDialog"><Icon name="tabler:file-plus" /></button>
+			<button class="w-icon-btn w-hide-mobile" data-tip="打开 .md" @click="fileInput?.click()"><Icon name="tabler:folder-open" /></button>
 			<input ref="fileInput" type="file" accept=".md,.markdown,text/markdown" hidden @change="openFile">
 
 			<span class="w-sep" />
@@ -601,8 +655,8 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 				<button :class="{ 'is-active': view === 'split' }" data-tip="左右对照" @click="setView('split')"><Icon name="tabler:columns-2" /></button>
 				<button :class="{ 'is-active': view === 'preview' }" data-tip="只看预览" @click="setView('preview')"><Icon name="tabler:eye" /></button>
 			</div>
-			<button class="w-publish" data-tip="导出到 content/posts/<年份>/" @click="openExportDialog">
-				<Icon name="tabler:download" /><span>导出 .md</span>
+			<button class="w-publish" data-tip="导出 .md 到博客目录" @click="openExportDialog">
+				<Icon name="tabler:download" /><span class="w-publish-label">导出 .md</span>
 			</button>
 		</header>
 
@@ -616,13 +670,13 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 				:key="s.label"
 				class="w-tool"
 				:class="{ 'is-inline': !!s.wrap }"
-				:data-tip="`${s.label} · ${s.syntax}\n${s.desc}`"
+				:data-tip="`${s.label}\n${s.desc}`"
 				@click="insertSnippet(s)"
 			>
 				<Icon :name="s.icon" />
 			</button>
 			<span class="w-spacer" />
-			<button class="w-mdc-trigger" data-tip="打开 MDC 组件库 (Ctrl+/)" @click="openPalette">
+			<button class="w-mdc-trigger" data-tip="MDC 组件库" @click="openPalette">
 				<Icon name="tabler:box-multiple" /><span>MDC 组件</span><kbd>Ctrl+/</kbd>
 			</button>
 		</div>
@@ -648,7 +702,7 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 				class="w-resizer"
 				role="separator"
 				aria-orientation="vertical"
-				data-tip="拖动调整左右宽度 · 双击复位"
+				data-tip="拖动改宽度 · 双击复位"
 				@pointerdown="onSplitDown"
 				@pointermove="onSplitMove"
 				@pointerup="onSplitUp"
@@ -674,15 +728,29 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 
 		<!-- ======== 状态栏 ======== -->
 		<footer class="w-status">
-			<span :class="{ 'is-error': statusError }">{{ status }}</span>
+			<span class="w-autosave" :class="{ 'is-error': statusError }">
+				<Icon :name="statusError ? 'tabler:alert-triangle' : 'tabler:cloud-upload'" />
+				<span>自动保存</span>
+				<span class="w-autosave-state">{{ status }}</span>
+			</span>
 			<span class="w-status-sep w-hide-mobile" />
 			<span class="w-hide-mobile">{{ wordCount }} 字 · 约 {{ readMinutes }} 分钟</span>
 			<span class="w-status-sep w-hide-mobile" />
 			<span class="w-hide-mobile">导出为 <code>{{ resolvedFileName }}</code></span>
 			<span class="w-spacer" />
-			<button class="w-status-btn" data-tip="复制 Markdown 源码" @click="copySource"><Icon name="tabler:clipboard" /></button>
+			<span
+				class="w-storage"
+				:class="{ 'is-warn': storageNearLimit, 'is-full': storageFull }"
+				:data-tip="`文章只存在本浏览器的 localStorage\n已用 ${formatBytes(storageUsed)} / 5 MB（${storagePercent}%）· 不上传云端`"
+			>
+				<Icon name="tabler:database" />
+				<span class="w-storage-label">本地 {{ formatBytes(storageUsed) }} / 5 MB</span>
+				<span class="w-storage-bar"><i :style="{ width: `${Math.max(2, storagePercent)}%` }" /></span>
+				<span class="w-storage-pct">{{ storagePercent }}%</span>
+			</span>
+			<button class="w-status-btn" data-tip="复制 Markdown" @click="copySource"><Icon name="tabler:clipboard" /></button>
 			<button class="w-status-btn" data-tip="复制正文 HTML" @click="copyHtml"><Icon name="tabler:code" /></button>
-			<span class="is-ok"><Icon name="tabler:circle-check" /> 预览与博客同源渲染</span>
+			<span class="is-ok w-hide-mobile"><Icon name="tabler:circle-check" /> 预览与博客同源渲染</span>
 		</footer>
 
 		<!-- ======== 文章库抽屉 ======== -->
@@ -696,8 +764,8 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 					<button class="w-icon-btn" data-tip="关闭" @click="showLibrary = false"><Icon name="tabler:x" /></button>
 				</header>
 				<div class="w-drawer-body">
-					<button class="w-new-article" @click="openNewDialog">
-						<Icon name="tabler:file-plus" /><span>新建文章</span><small>当前文章会自动存入库</small>
+					<button class="w-new-article" :disabled="storageFull" @click="openNewDialog">
+						<Icon name="tabler:file-plus" /><span>{{ storageFull ? '存储已满，无法新建' : '新建文章' }}</span><small>当前文章会自动存入库</small>
 					</button>
 					<div v-if="!articles.length" class="w-empty">
 						<Icon name="tabler:inbox" /><p>文章库还是空的</p>
@@ -722,6 +790,7 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 				</div>
 				<footer class="w-drawer-foot">
 					<span class="w-foot-note">共 {{ articles.length }} 篇 · 仅存于本机浏览器</span>
+					<button class="w-btn w-about-entry" @click="showAbout = true"><Icon name="tabler:info-circle" /> 关于本站</button>
 				</footer>
 			</aside>
 		</div>
@@ -888,6 +957,50 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 						<p class="w-palette-hint">点击或回车插入 · ↑↓ 选择 · Esc 关闭</p>
 					</aside>
 				</div>
+			</div>
+		</div>
+
+		<!-- ======== 关于本站 ======== -->
+		<div v-if="showAbout" class="w-scrim w-export-scrim" @click.self="showAbout = false">
+			<div class="w-about">
+				<header class="w-about-head">
+					<img src="/carrot.svg" alt="">
+					<div>
+						<h2>关于 blog writing@jie</h2>
+						<p>为博客 box.yangjie.site 写的专用写作工作台</p>
+					</div>
+					<button class="w-icon-btn" data-tip="关闭" @click="showAbout = false"><Icon name="tabler:x" /></button>
+				</header>
+
+				<div class="w-about-body">
+					<p class="w-about-lead">
+						左边写 Markdown 与 MDC 组件，右边实时预览成博客文章的样子。预览复用博客同一套 remark/rehype 插件与组件，所见即所得，不是近似渲染。
+					</p>
+
+					<div class="w-about-warning">
+						<Icon name="tabler:alert-triangle" />
+						<div>
+							<strong>文章不上传云端，只保存在你自己的浏览器里</strong>
+							<p>
+								使用浏览器本地存储（localStorage）自动保存，有容量上限。
+								<b>请不要清除本站缓存 / 站点数据</b>，清除后文章无法恢复。
+								请养成习惯：写完及时点「导出 .md」，把文件放进博客仓库，才算真正安全。
+							</p>
+						</div>
+					</div>
+
+					<dl class="w-about-meta">
+						<div><dt>作者</dt><dd><a href="https://www.yangjie.site" target="_blank" rel="noopener noreferrer">youngdajie <Icon name="tabler:external-link" /></a></dd></div>
+						<div><dt>作者主页</dt><dd><a href="https://www.yangjie.site" target="_blank" rel="noopener noreferrer">www.yangjie.site <Icon name="tabler:external-link" /></a></dd></div>
+						<div><dt>项目地址</dt><dd><a href="https://cnb.cool/youngdajie/edit.yangjie.site" target="_blank" rel="noopener noreferrer">cnb.cool/youngdajie/edit.yangjie.site <Icon name="tabler:external-link" /></a></dd></div>
+						<div><dt>线上站点</dt><dd><a href="https://edit.yangjie.site" target="_blank" rel="noopener noreferrer">edit.yangjie.site <Icon name="tabler:external-link" /></a></dd></div>
+						<div><dt>开源协议</dt><dd>MIT · 启发自 stellar-writing</dd></div>
+					</dl>
+				</div>
+
+				<footer class="w-about-foot">
+					<button class="w-btn is-primary" @click="showAbout = false"><Icon name="tabler:check" /> 知道了</button>
+				</footer>
 			</div>
 		</div>
 

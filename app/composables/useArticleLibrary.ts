@@ -20,6 +20,8 @@ export function useArticleLibrary() {
 	/** 库内所有文章，按更新时间倒序 */
 	const articles = shallowRef<LibraryArticle[]>([])
 	const currentId = ref<string>('')
+	/** 最近一次写入是否因配额等原因失败，供 UI 提示用户 */
+	const persistFailed = ref(false)
 
 	function load() {
 		if (!import.meta.client)
@@ -36,21 +38,26 @@ export function useArticleLibrary() {
 		currentId.value = localStorage.getItem(CURRENT_KEY) || articles.value[0]?.id || ''
 	}
 
-	function persist() {
+	function persist(): boolean {
 		if (!import.meta.client)
-			return
+			return true
 		try {
 			localStorage.setItem(LIBRARY_KEY, JSON.stringify(articles.value))
 			if (currentId.value)
 				localStorage.setItem(CURRENT_KEY, currentId.value)
 			else
 				localStorage.removeItem(CURRENT_KEY)
+			persistFailed.value = false
+			return true
 		}
-		catch { /* 存储写满时静默失败，当前编辑不受影响 */ }
+		catch {
+			persistFailed.value = true
+			return false
+		}
 	}
 
-	/** 新增或更新一篇（按 id），source 为完整 .md 文本 */
-	function save(article: Pick<LibraryArticle, 'id' | 'fileName' | 'source'>) {
+	/** 新增或更新一篇（按 id），source 为完整 .md 文本；返回是否成功写入本地 */
+	function save(article: Pick<LibraryArticle, 'id' | 'fileName' | 'source'>): boolean {
 		const now = formatDateTime(new Date())
 		const idx = articles.value.findIndex(a => a.id === article.id)
 		const entry: LibraryArticle = {
@@ -61,7 +68,7 @@ export function useArticleLibrary() {
 			articles.value[idx] = entry
 		else
 			articles.value.unshift(entry)
-		persist()
+		return persist()
 	}
 
 	function remove(id: string) {
@@ -88,6 +95,7 @@ export function useArticleLibrary() {
 	return {
 		articles,
 		currentId,
+		persistFailed,
 		hasCurrent,
 		load,
 		save,

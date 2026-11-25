@@ -25,12 +25,12 @@ export const SNIPPETS: Snippet[] = [
 	// ---------- 基础（Markdown 全量语法） ----------
 	{
 		label: '二级标题', group: '基础', icon: 'tabler:heading',
-		desc: '章节标题 ##', syntax: '## 标题',
+		desc: '章节标题', syntax: '## 标题',
 		template: '## $0章节标题',
 	},
 	{
 		label: '三级标题', group: '基础', icon: 'tabler:heading',
-		desc: '小节标题 ###', syntax: '### 标题',
+		desc: '小节标题', syntax: '### 标题',
 		template: '### $0小节标题',
 	},
 	{
