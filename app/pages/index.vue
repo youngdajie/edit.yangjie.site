@@ -936,9 +936,7 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 						autofocus
 						placeholder="搜索 MDC 组件，例如 alert、pics、mermaid"
 					>
-					<button class="w-palette-esc" data-tip="关闭组件库" @click="showPalette = false">
-						<Icon name="tabler:x" /><span>Esc</span>
-					</button>
+					<button class="w-palette-esc" data-tip="关闭组件库 (Esc)" @click="showPalette = false">Esc</button>
 				</div>
 				<div class="w-palette-body">
 					<div ref="paletteListRef" class="w-palette-list">
@@ -987,7 +985,7 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 
 				<div class="w-about-body">
 					<p class="w-about-lead">
-						左边写 Markdown 与 MDC 组件，右边实时预览成博客文章的样子，预览复用博客同一套 remark/rehype 插件与组件，所见即所得，不是近似渲染
+						左边写 Markdown 与 MDC 组件，右边实时预览成博客文章的样子，预览复用博客同一套 remark/rehype 插件与组件
 					</p>
 
 					<p class="w-about-render"><Icon name="tabler:circle-check" /> 预览与博客同源渲染</p>
