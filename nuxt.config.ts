@@ -183,6 +183,9 @@ export default defineNuxtConfig({
 	},
 
 	image: {
+		// 线上是纯静态托管，没有 IPX 服务；不关掉的话 /sample-cover.svg 会被
+		// 改写成 /_ipx/_/sample-cover.svg 而 404。这里直接输出原图地址。
+		provider: 'none',
 		densities: [1, 1.5, 2],
 		format: ['avif', 'webp'],
 	},

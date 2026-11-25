@@ -96,6 +96,8 @@ const newTitleInput = ref('')
 const newNameInput = ref('')
 const newNameTouched = ref(false)
 const status = ref('就绪')
+/** 只在挂载后渲染依赖 localStorage 的 UI，避免 SSR/CSR 首帧不一致 */
+const mounted = ref(false)
 const statusError = ref(false)
 const savedAt = ref('')
 const fileName = ref('example.md')
@@ -345,6 +347,8 @@ function deleteArticle(id: string) {
 onMounted(() => {
 	lib.load()
 	measureStorage()
+	// 水合完成后再允许渲染依赖 localStorage 的 UI（如文章数徽标）
+	mounted.value = true
 	// 恢复主题（color-mode 自己也持久化，这里做双保险）
 	const savedTheme = localStorage.getItem(THEME_KEY)
 	if (savedTheme === 'dark' || savedTheme === 'light')
@@ -653,7 +657,7 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 			</button>
 			<button class="w-icon-btn" data-tip="文章库" @click="showLibrary = !showLibrary">
 				<Icon name="tabler:books" />
-				<span v-if="articles.length" class="w-badge">{{ articles.length }}</span>
+				<span v-if="mounted && articles.length" class="w-badge">{{ articles.length }}</span>
 			</button>
 			<button class="w-icon-btn" data-tip="文章设置" @click="showMeta = !showMeta"><Icon name="tabler:settings" /></button>
 			<button class="w-icon-btn w-hide-mobile" data-tip="关于本站" @click="showAbout = true"><Icon name="tabler:info-circle" /></button>
