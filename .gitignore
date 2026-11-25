@@ -1,0 +1,42 @@
+# Nuxt dev/build outputs
+.output
+.data
+.nuxt
+.nitro
+.cache
+dist
+# 本地构建被工作区守卫拦住时用来挪存量的临时目录（可随时删）
+.build-tmp
+
+# Node dependencies
+node_modules
+
+# Logs
+logs
+*.log
+
+# Misc
+.DS_Store
+.fleet
+.idea
+
+# Local env files
+.env
+.env.*
+!.env.example
+
+# Custom
+.vercel
+content/posts/test.md
+
+# 追番数据 app/follow/data.json **要提交进 git**：`app/pages/follow.vue` 是静态
+# import 它的，缺文件构建直接报错（新克隆的仓库、没配 bangumiUser 也一样）。
+# 数据只在本地拉：`pnpm follow` 覆盖这份文件，看完 diff 一起提交。
+# 流水线和构建期都不碰它 —— 不拉取、不联网、不回写。
+#
+# 同理，封面 app/follow/img/ **也要提交**：`pnpm follow` 会把封面下到这里，
+# data.json 里存的是 `/follow/img/<subject_id>.<ext>`。这些是构建产物目录里
+# 唯一需要入库的一类文件，别当成缓存加进来（入库后线上才不用连 lain.bgm.tv）。
+
+# WorkBuddy local workspace data
+.workbuddy/

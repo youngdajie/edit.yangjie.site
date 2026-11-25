@@ -1,0 +1,69 @@
+/**
+ * 默认字体栈放在 `@layer font-defaults` 里。
+ *
+ * CSS 分层规则：**未分层的声明永远压过分层里的**，所以 `blog.config.ts` 开启自定义字体后，
+ * `<head>` 注入的那条未分层 `:root{--font-*-custom:…}` 一定生效 ——
+ * 不必去赌「内联 `<style>` 与整站 CSS 谁先谁后」（实测：不分层时会被这份默认值盖掉）。
+ */
+@layer font-defaults {
+	:root {
+		/**
+		 * 用户在 `blog.config.ts` 的 `font` 里配的自定义字体族。
+		 *
+		 * 这里是**空值** —— 空的自定义属性是合法的，`var()` 代进来就等于「什么都没有」，
+		 * 于是下面每条字体栈照常从系统字体开始；只有开了 `font.enable`，`<head>`
+		 * 里的内联样式才会把它们覆写成「"字体名",」，让自定义字体顶到最前面。
+		 *
+		 * 这样做的原因：字体栈的兜底顺序只应该有一份（就在这个文件里），
+		 * `blog.config.ts` 只提供字体名，不必把整条栈抄过去。
+		 */
+		--font-basic-custom: ;
+		--font-serif-custom: ;
+		--font-creative-custom: ;
+		--font-stroke-free-custom: ;
+		--font-monospace-custom: ;
+		--font-header-custom: ;
+
+		--font-basic: var(--font-basic-custom) "InterVariable", /* Android/Linux */ "sans-serif", /* Firefox */ "Noto Sans SC", sans-serif;
+		--font-serif: var(--font-serif-custom) /* Windows */ "Noto Serif SC-Local", "Noto Serif SC", serif;
+		--font-creative: var(--font-creative-custom) "DOUYINSANSBOLD-GB", "InterVariable", sans-serif;
+		--font-stroke-free: var(--font-stroke-free-custom) "DOUYINSANSBOLD-GB", "Inter", /* macOS */ "Lantinghei SC", /* Windows */ "Microsoft YaHei", sans-serif;
+		--font-monospace: var(--font-monospace-custom) "JetBrains Mono", /* Android/Linux */ "monospace", /* Windows */ "Cascadia Code", /* Windows */ "Consolas", /* Apple */ "Monaco", var(--font-basic), monospace;
+
+		/**
+		 * 站点头部标题（`BlogHeader.global.vue`）。
+		 * 没配自定义字体时落到系统字体（与全站默认一致）。
+		 */
+		--font-header: var(--font-header-custom) "Noto Sans SC", sans-serif;
+
+		@media (max-resolution: 1.2dppx) {
+			/* 低像素密度下 InterVariable 渲染反而糊，让位给系统字体；自定义字体仍在最前 */
+			--font-basic: var(--font-basic-custom) system-ui, sans-serif;
+		}
+	}
+}
+
+/* eslint-disable css/no-invalid-at-rules -- CSS Fonts 的 @styleset 暂未被检查器识别 */
+@font-feature-values "InterVariable", "Inter" {
+	@styleset {
+		open-digits: 1;
+		disambiguation: 2;
+		round-quotes-and-commas: 3;
+		disambiguation-except-zero: 4;
+		circled-characters: 5;
+		squared-characters: 6;
+		square-punctuation: 7;
+		square-quotes: 8;
+	}
+}
+
+/* eslint-enable css/no-invalid-at-rules */
+/* 仅在 Chrome 130+ 启用本地可变字体 */
+/* autoprefixer: ignore next */
+@supports (box-decoration-break: clone) {
+	@font-face {
+		font-family: "Noto Serif SC-Local";
+		font-weight: 100 900;
+		src: local("Noto Serif SC");
+	}
+}

@@ -1,0 +1,6 @@
+{
+  "buildCommand": "pnpm build",
+  "installCommand": "pnpm install",
+  "outputDirectory": ".output",
+  "nodeVersion": "22.11.0"
+}

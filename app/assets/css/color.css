@@ -1,0 +1,96 @@
+:root,
+.light {
+	/**
+	 * 品牌主色，色值就是 #1296db。
+	 *
+	 * 写成 hsl 而不是 hex：本文件其余颜色都是 hsl，而且这套 lint 的
+	 * `color-hex-case`（要求大写）与 `unit-case`（要求小写）对
+	 * 「6 位带字母的 hex」正好互相打架，怎么写都会报一条。
+	 * `hsl(200.6deg 84.8% 46.5%)` 与 #1296db 逐通道完全一致。
+	 */
+	--brand-primary: hsl(200.6deg 84.8% 46.5%);
+
+	/**
+	 * 主题色相。整套颜色都从这一个角度推出来（主色是它的高饱和版本，
+	 * 背景 / 边框 / 文字是它的低饱和版本）。
+	 *
+	 * 与 `--brand-primary` 保持一致 —— 改主色时**两处都要改**，
+	 * 否则低饱和的底色会和主色串味。
+	 */
+	--hue-theme: 200.6deg;
+	--c-text: hsl(var(--hue-theme) 0% 0%);
+	--c-text-1: hsl(var(--hue-theme) 0% 20%);
+	--c-text-2: hsl(var(--hue-theme) 0% 40%);
+	--c-text-3: hsl(var(--hue-theme) 0% 70%);
+	--c-bg: hsl(var(--hue-theme) 0% 100%);
+	--c-bg-1: hsl(var(--hue-theme) 20% 98%);
+	--c-bg-2: hsl(var(--hue-theme) 10% 95%);
+	--c-bg-3: hsl(var(--hue-theme) 10% 92%);
+	--c-bg-soft: hsl(var(--hue-theme) 20% 20% / 10%);
+	--c-border: hsl(var(--hue-theme) 10% 91%);
+	--c-bg-a50: hsl(var(--hue-theme) 20% 98% / 50%);
+	--c-bg-a80: hsl(var(--hue-theme) 20% 98% / 80%);
+	/**
+	 * 主色直接给品牌值。
+	 *
+	 * 主题原本写的是 `hsl(var(--hue-theme) 100% 55%)` —— 饱和度和亮度写死，
+	 * 只能换色相、没法精确对上 #1296db（那会得到 #1AB0FF，明显更亮更荧）。
+	 *
+	 * 注意对比度：#1296db 对白底是 3.28:1，达不到正文链接的 AA 4.5:1
+	 * （大字号、图标、边框没问题）。想更稳就把 --brand-primary 换成
+	 * #0F7FBA（4.41）或 #0D6EA3（5.56，完全达标）。
+	 */
+	--c-primary: var(--brand-primary);
+	--c-primary-soft: hsl(200.6deg 84.8% 46.5% / 15%);
+	--c-accent: hsl(180deg 70% 60%);
+	/**
+	 * 「人格类型色」和主题文字色的混合比例（关于页的 MBTI 代码用）。
+	 *
+	 * 深色下 `--c-text-1` 是亮白，混得多一点能把族色提亮到深底上看得清；
+	 * 浅色下它是深灰，混得少一点才够深（实测 82% 时对比度 7.5:1，
+	 * 暗色下若也用 82% 只有 1.5:1，完全不合格）。
+	 */
+	--personality-mix: 82%;
+	--ld-bg-blur: var(--c-bg-1);
+	--ld-bg-card: var(--c-bg);
+	--ld-bg-active: var(--c-bg);
+	--ld-shadow: var(--c-bg-soft);
+	--c-success: #5A5;
+	--c-success-soft: #3F32;
+	--c-warning: #D85;
+	--c-warning-soft: #F932;
+	--c-error: #D55;
+	--c-error-soft: #F332;
+
+	color-scheme: only light;
+}
+
+.dark {
+	--c-text: hsl(var(--hue-theme) 0% 100%);
+	--c-text-1: hsl(var(--hue-theme) 0% 90%);
+	--c-text-2: hsl(var(--hue-theme) 0% 70%);
+	--c-text-3: hsl(var(--hue-theme) 0% 50%);
+	--c-bg: hsl(var(--hue-theme) 0% 7%);
+	--c-bg-1: hsl(var(--hue-theme) 10% 10%);
+	--c-bg-2: hsl(var(--hue-theme) 10% 14%);
+	--c-bg-3: hsl(var(--hue-theme) 10% 18%);
+	--c-bg-soft: hsl(var(--hue-theme) 100% 95% / 15%);
+	--c-border: hsl(var(--hue-theme) 10% 20%);
+	--c-bg-a50: hsl(var(--hue-theme) 10% 10% / 50%);
+	--c-bg-a80: hsl(var(--hue-theme) 10% 10% / 80%);
+	/**
+	 * 深色模式沿用同一个品牌色 —— #1296db 对 7% 深的底是 5.72:1，够 AA，
+	 * 没必要为了「深色下更亮」牺牲品牌一致性。
+	 * 想恢复主题原本的手感，把这行换成 `hsl(200.6deg 85% 65%)`（≈ #5ABEF2）。
+	 */
+	--c-primary: var(--brand-primary);
+	--c-primary-soft: hsl(200.6deg 84.8% 46.5% / 22%);
+	/** 深色下多混一点亮白，把族色提亮到能看清（浅色那边是 82%） */
+	--personality-mix: 52%;
+	--ld-bg-blur: var(--c-bg-a80);
+	--ld-bg-card: var(--c-bg-3);
+	--ld-bg-active: var(--c-primary-soft);
+	--ld-shadow: var(--c-bg-a50);
+
+	color-scheme: dark;
+}

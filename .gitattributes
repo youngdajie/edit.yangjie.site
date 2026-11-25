@@ -1,0 +1,8 @@
+*               text=auto
+# 补丁文件必须保持 LF，否则 Windows 下 pnpm 无法解析（core.autocrlf=true 时会转换）
+*.patch         -text
+*.md            linguist-detectable
+pnpm-lock.yaml  -linguist-detectable
+app/feeds.ts    -linguist-detectable
+
+# 追番数据 app/follow/data.json 入库当缓存，由 CI 每 10 天刷一次并推回 main

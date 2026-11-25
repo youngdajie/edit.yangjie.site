@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" width="1200" height="420" role="img" aria-label="blog writing@jie 写作工作台介绍图">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f9fbfe"/>
+      <stop offset="100%" stop-color="#e7eef9"/>
+    </linearGradient>
+    <linearGradient id="carrot" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FEBB4A"/>
+      <stop offset="100%" stop-color="#F2761B"/>
+    </linearGradient>
+    <linearGradient id="primary" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#38a8ee"/>
+      <stop offset="100%" stop-color="#0e86d0"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#334155" flood-opacity="0.14"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="420" rx="22" fill="url(#bg)"/>
+  <circle cx="1120" cy="-30" r="180" fill="#dbeafe" opacity="0.45"/>
+  <circle cx="70" cy="410" r="120" fill="#fde8c8" opacity="0.35"/>
+
+  <!-- ============ 左：项目标识 ============ -->
+  <g transform="translate(62 56)">
+    <!-- 胡萝卜 -->
+    <path d="M22 10 Q10 -2 2 3" stroke="#68A848" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M22 10 Q33 -3 42 1" stroke="#45873D" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M22 9 C31 12 36 22 33 32 C30 42 20 51 12 50 C6 49 3 42 6 33 C9 22 14 13 22 9 Z" fill="url(#carrot)"/>
+    <path d="M13 30 L28 24 M12 38 L24 32" stroke="#fff" stroke-width="2" opacity="0.35" stroke-linecap="round"/>
+  </g>
+
+  <text x="118" y="92" font-family="system-ui,-apple-system,Segoe UI,Microsoft YaHei,sans-serif" font-size="31" font-weight="700" fill="#0f172a" letter-spacing="-0.5">blog writing@jie</text>
+  <text x="62" y="146" font-family="system-ui,-apple-system,Segoe UI,Microsoft YaHei,sans-serif" font-size="16" fill="#334155">为 box.yangjie.site 写的专用写作工作台</text>
+  <text x="62" y="172" font-family="system-ui,-apple-system,Segoe UI,Microsoft YaHei,sans-serif" font-size="13" fill="#64748b">左边写 Markdown 与 MDC，右边就是博客文章的样子</text>
+
+  <!-- 能力标签 -->
+  <g font-family="system-ui,-apple-system,Segoe UI,Microsoft YaHei,sans-serif" font-size="12" font-weight="600" fill="#0e86d0">
+    <rect x="62" y="196" width="86" height="30" rx="15" fill="#fff" stroke="#bfdbfe"/>
+    <text x="105" y="216" text-anchor="middle">真渲染</text>
+    <rect x="156" y="196" width="86" height="30" rx="15" fill="#fff" stroke="#bfdbfe"/>
+    <text x="199" y="216" text-anchor="middle">文章库</text>
+    <rect x="250" y="196" width="98" height="30" rx="15" fill="#fff" stroke="#bfdbfe"/>
+    <text x="299" y="216" text-anchor="middle">深色模式</text>
+  </g>
+
+  <!-- 流程 -->
+  <g font-family="system-ui,-apple-system,Segoe UI,Microsoft YaHei,sans-serif" font-size="12.5" fill="#475569">
+    <text x="62" y="272">Markdown</text>
+    <path d="M132 267 L152 267 M147 262 L152 267 L147 272" stroke="#94a3b8" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="160" y="272" fill="#0e86d0" font-weight="600">同款 MDC 渲染</text>
+    <path d="M262 267 L282 267 M277 262 L282 267 L277 272" stroke="#94a3b8" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="290" y="272">.md 导出</text>
+  </g>
+
+  <text x="62" y="326" font-family="system-ui,-apple-system,Segoe UI,Microsoft YaHei,sans-serif" font-size="12.5" fill="#64748b">启发自 stellar-writing · 预览复用博客的组件与样式</text>
+  <rect x="62" y="346" width="290" height="34" rx="9" fill="#fff" stroke="#e2e8f0"/>
+  <text x="76" y="368" font-family="system-ui,-apple-system,Segoe UI,Microsoft YaHei,sans-serif" font-size="13" fill="#0e86d0" font-weight="600">https://edit.yangjie.site</text>
+
+  <!-- ============ 右：编辑器界面示意 ============ -->
+  <g filter="url(#shadow)">
+    <rect x="470" y="44" width="672" height="332" rx="14" fill="#fff" stroke="#e2e8f0"/>
+  </g>
+
+  <!-- 顶栏 -->
+  <path d="M470 58 A14 14 0 0 1 484 44 H1128 A14 14 0 0 1 1142 58 V84 H470 Z" fill="#fbfdff"/>
+  <line x1="470" y1="84" x2="1142" y2="84" stroke="#e8edf3"/>
+  <circle cx="492" cy="64" r="4" fill="#f87171"/>
+  <circle cx="508" cy="64" r="4" fill="#fbbf24"/>
+  <circle cx="524" cy="64" r="4" fill="#4ade80"/>
+  <rect x="620" y="56" width="176" height="16" rx="8" fill="#eef2f7"/>
+  <rect x="1000" y="54" width="122" height="22" rx="6" fill="url(#primary)"/>
+  <text x="1061" y="69" font-family="system-ui,-apple-system,Segoe UI,Microsoft YaHei,sans-serif" font-size="10.5" font-weight="700" fill="#fff" text-anchor="middle">导出 .md</text>
+
+  <!-- 工具栏 -->
+  <line x1="470" y1="116" x2="1142" y2="116" stroke="#e8edf3"/>
+  <g fill="#eef2f7">
+    <rect x="486" y="94" width="20" height="12" rx="3"/>
+    <rect x="512" y="94" width="20" height="12" rx="3"/>
+    <rect x="544" y="94" width="20" height="12" rx="3"/>
+    <rect x="570" y="94" width="20" height="12" rx="3"/>
+    <rect x="596" y="94" width="20" height="12" rx="3"/>
+    <rect x="622" y="94" width="20" height="12" rx="3"/>
+    <rect x="648" y="94" width="20" height="12" rx="3"/>
+    <rect x="674" y="94" width="20" height="12" rx="3"/>
+    <rect x="700" y="94" width="20" height="12" rx="3"/>
+  </g>
+  <rect x="1000" y="90" width="122" height="20" rx="6" fill="#e8f4fd" stroke="#9ccdf0"/>
+  <text x="1061" y="104" font-family="system-ui,-apple-system,Segoe UI,Microsoft YaHei,sans-serif" font-size="10" font-weight="600" fill="#0e86d0" text-anchor="middle">MDC 组件  Ctrl+/</text>
+
+  <!-- 左栏：源码 -->
+  <rect x="470" y="116" width="28" height="260" fill="#fafcff"/>
+  <line x1="498" y1="116" x2="498" y2="376" stroke="#edf1f6"/>
+  <g font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="9" fill="#b6c2d1">
+    <text x="480" y="146">1</text><text x="480" y="166">2</text><text x="480" y="186">3</text>
+    <text x="480" y="216">5</text><text x="480" y="236">6</text><text x="480" y="256">7</text>
+    <text x="480" y="276">8</text><text x="480" y="296">9</text><text x="480" y="316">10</text>
+    <text x="480" y="346">12</text>
+  </g>
+  <g>
+    <rect x="510" y="139" width="112" height="6" rx="3" fill="#cbd5e1"/>
+    <rect x="510" y="159" width="176" height="6" rx="3" fill="#cbd5e1"/>
+    <rect x="510" y="179" width="88" height="6" rx="3" fill="#cbd5e1"/>
+    <rect x="510" y="209" width="146" height="7" rx="3" fill="#0e86d0"/>
+    <rect x="510" y="229" width="224" height="6" rx="3" fill="#dbe2ea"/>
+    <rect x="510" y="249" width="190" height="6" rx="3" fill="#dbe2ea"/>
+    <rect x="510" y="269" width="196" height="7" rx="3" fill="#38a8ee"/>
+    <rect x="510" y="289" width="158" height="6" rx="3" fill="#dbe2ea"/>
+    <rect x="510" y="309" width="112" height="7" rx="3" fill="#38a8ee"/>
+    <rect x="510" y="339" width="206" height="6" rx="3" fill="#f2b45c"/>
+    <rect x="510" y="359" width="168" height="6" rx="3" fill="#dbe2ea"/>
+  </g>
+
+  <!-- 右栏：渲染结果 -->
+  <line x1="806" y1="116" x2="806" y2="376" stroke="#e8edf3"/>
+  <rect x="826" y="136" width="182" height="13" rx="4" fill="#1e293b"/>
+  <rect x="826" y="162" width="286" height="6" rx="3" fill="#e2e8f0"/>
+  <rect x="826" y="178" width="248" height="6" rx="3" fill="#e2e8f0"/>
+  <rect x="826" y="194" width="270" height="6" rx="3" fill="#e2e8f0"/>
+
+  <!-- alert 卡片 -->
+  <rect x="820" y="214" width="302" height="62" rx="9" fill="#eff8ff" stroke="#c9e2f7"/>
+  <circle cx="840" cy="236" r="7" fill="#0e86d0"/>
+  <rect x="856" y="232" width="212" height="6" rx="3" fill="#9ccdf0"/>
+  <rect x="856" y="248" width="166" height="6" rx="3" fill="#c9e2f7"/>
+
+  <!-- 诗词 -->
+  <text x="971" y="300" font-family="system-ui,-apple-system,Segoe UI,Microsoft YaHei,sans-serif" font-size="10" font-weight="700" fill="#475569" text-anchor="middle">滕王阁序 · 节选</text>
+  <rect x="886" y="310" width="170" height="5" rx="2.5" fill="#cbd5e1"/>
+  <rect x="902" y="322" width="138" height="5" rx="2.5" fill="#cbd5e1"/>
+  <rect x="890" y="334" width="162" height="5" rx="2.5" fill="#cbd5e1"/>
+  <rect x="910" y="346" width="122" height="5" rx="2.5" fill="#cbd5e1"/>
+
+  <!-- 状态栏 -->
+  <line x1="470" y1="356" x2="1142" y2="356" stroke="#eef2f7"/>
+  <rect x="486" y="364" width="72" height="5" rx="2.5" fill="#e8edf3"/>
+  <rect x="1040" y="364" width="82" height="5" rx="2.5" fill="#d8f0e2"/>
+</svg>
