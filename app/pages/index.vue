@@ -146,6 +146,8 @@ const {
 	x: tipX,
 	y: tipY,
 	above: tipAbove,
+	arrowLeft: tipArrowLeft,
+	tipEl,
 } = useTooltip()
 
 // ---------- 主题 ----------
@@ -1132,9 +1134,10 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 			<Transition name="tip">
 				<div
 					v-if="tipVisible"
+					ref="tipEl"
 					class="w-tip"
 					:class="{ 'is-above': tipAbove }"
-					:style="{ left: `${tipX}px`, top: `${tipY}px` }"
+					:style="{ left: `${tipX}px`, top: `${tipY}px`, '--tip-arrow': `${tipArrowLeft}px` }"
 				>
 					<strong v-if="tipLines[0]">{{ tipLines[0] }}</strong>
 					<span v-for="(line, i) in tipLines.slice(1)" :key="i">{{ line }}</span>

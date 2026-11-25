@@ -1118,7 +1118,8 @@
 	content: '';
 	position: absolute;
 	top: -4px;
-	left: 50%;
+	/* 跟随触发元素的位置，浮层被推到视口内时箭头依然对准它 */
+	left: var(--tip-arrow, 50%);
 	width: 8px;
 	height: 8px;
 	margin-left: -4px;

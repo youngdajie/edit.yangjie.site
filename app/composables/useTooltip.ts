@@ -9,20 +9,32 @@ export function useTooltip() {
 	const x = ref(0)
 	const y = ref(0)
 	const above = ref(false)
+	/** 箭头相对浮层左边缘的位置：浮层被推到一边时，箭头仍指着触发元素 */
+	const arrowLeft = ref(0)
+	/** 绑到浮层根节点，用于测量真实宽度 */
+	const tipEl = ref<HTMLElement | null>(null)
 
 	const lines = computed(() => text.value.split('\n').filter(Boolean))
 
 	let showTimer: ReturnType<typeof setTimeout> | null = null
 	let current: HTMLElement | null = null
 
-	function place(el: HTMLElement) {
+	const EDGE = 8
+
+	/** 按浮层实际宽度修正水平位置，并同步箭头偏移 */
+	function align(el: HTMLElement) {
 		const rect = el.getBoundingClientRect()
-		// 浮层最大宽度 280px，居中后左右各留 8px
-		const half = 140
-		x.value = Math.min(window.innerWidth - half - 8, Math.max(half + 8, rect.left + rect.width / 2))
+		const width = tipEl.value?.offsetWidth || 160
+		const half = width / 2
+		const center = rect.left + rect.width / 2
+		const left = Math.min(window.innerWidth - half - EDGE, Math.max(half + EDGE, center))
+		x.value = left
+		// 箭头落在浮层内的位置，留出圆角空间避免贴边
+		arrowLeft.value = Math.min(width - 16, Math.max(16, center - (left - half)))
+
 		const roomBelow = window.innerHeight - rect.bottom
 		above.value = roomBelow < 90
-		y.value = above.value ? Math.max(8, rect.top - 9) : rect.bottom + 9
+		y.value = above.value ? Math.max(EDGE, rect.top - 9) : rect.bottom + 9
 	}
 
 	function show(el: HTMLElement) {
@@ -31,10 +43,16 @@ export function useTooltip() {
 		if (current === el && visible.value) return
 		current = el
 		clear()
-		showTimer = setTimeout(() => {
+		showTimer = setTimeout(async () => {
 			text.value = value
-			place(el)
+			// 先按触发元素中心粗定位渲染出来，再依据真实宽度精修一次
+			const rect = el.getBoundingClientRect()
+			x.value = rect.left + rect.width / 2
+			y.value = rect.bottom + 9
+			above.value = false
 			visible.value = true
+			await nextTick()
+			align(el)
 		}, 90)
 	}
 
@@ -84,5 +102,5 @@ export function useTooltip() {
 		clear()
 	})
 
-	return { text, lines, visible, x, y, above, clear }
+	return { text, lines, visible, x, y, above, arrowLeft, tipEl, clear }
 }

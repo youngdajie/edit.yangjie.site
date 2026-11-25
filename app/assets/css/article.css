@@ -130,6 +130,12 @@
 			text-wrap: balance;
 		}
 
+		/* isolation 让下面 ::before 的 z-index:-1 只作用在标题内部。
+		   否则负层级会沉到 .w-preview-host 的白色背景之下，光晕被遮住看不见 */
+		> h2 {
+			isolation: isolate;
+		}
+
 		> h2::before {
 			content: "";
 			position: absolute;
