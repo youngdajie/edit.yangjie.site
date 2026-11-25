@@ -423,15 +423,15 @@ watch(source, () => {
 })
 
 async function requestPreview() {
+	// 纯静态部署没有 server 运行时，直接在浏览器里解析（与博客同一套 mdc 插件）
+	if (!import.meta.client)
+		return
 	const seq = ++previewSeq
 	previewLoading.value = true
 	try {
-		const data = await $fetch<{ body: any }>('/api/preview', {
-			method: 'POST',
-			body: { source: source.value },
-		})
+		const data = await parsePreviewMarkdown(source.value)
 		if (seq === previewSeq)
-			previewAst.value = data.body
+			previewAst.value = data.body as typeof previewAst.value
 	}
 	catch (error) {
 		if (seq === previewSeq) {
@@ -637,8 +637,8 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 	<div class="writing-app">
 		<!-- ======== 顶栏 ======== -->
 		<header class="w-top">
-			<div class="w-logo"><img src="/carrot.svg" alt="blog writing@jie"></div>
-			<span class="w-brand">blog writing@jie</span>
+			<div class="w-logo"><img src="/carrot.svg" alt="blog writing@JIE"></div>
+			<span class="w-brand">blog writing@JIE</span>
 			<span class="w-sep" />
 			<div class="w-doc">
 				<strong class="w-doc-title" :data-tip="displayTitle">{{ displayTitle }}</strong>
@@ -977,7 +977,7 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 				<header class="w-about-head">
 					<img src="/carrot.svg" alt="">
 					<div>
-						<h2>关于 blog writing@jie</h2>
+						<h2>关于 blog writing@JIE</h2>
 						<p>为博客 box.yangjie.site 写的专用写作工作台</p>
 					</div>
 					<button class="w-icon-btn" data-tip="关闭" @click="showAbout = false"><Icon name="tabler:x" /></button>

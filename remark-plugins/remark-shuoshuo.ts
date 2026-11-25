@@ -1,5 +1,5 @@
 import type { Heading, Paragraph, Parent, Root, RootContent } from 'mdast'
-import { parseShuoshuoHeading, SHUOSHUO_PLUS_MARKER_RE, stripShuoshuoMarker } from '../shared/utils/shuoshuo-heading.ts'
+import { parseShuoshuoHeading, SHUOSHUO_PLUS_MARKER_RE, stripShuoshuoMarker } from '~~/shared/utils/shuoshuo-heading'
 
 /**
  * 把 `shuoshuo.md` 里的分隔标记切分成一条条说说。

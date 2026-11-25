@@ -76,7 +76,7 @@ MDC 组件靠空行切分段落。组件开合标记、正文、下一个组件�
 ## 代码、命令与公式
 
 \`\`\`ts [src/hello.ts]
-const message = 'blog writing@jie'
+const message = 'blog writing@JIE'
 
 function greet(name: string) {
   return \`\${message} · 你好，\${name}\`
@@ -117,7 +117,7 @@ images:
 - **同步滚动**：左边滚到哪，右边跟到哪
 ::
 
-:badge{text="blog writing@jie" link="https://www.yangjie.site"}
+:badge{text="blog writing@JIE" link="https://www.yangjie.site"}
 
 ## 时间线与对话
 

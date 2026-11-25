@@ -29,7 +29,7 @@ function fileUrlResolvePlugin(): Plugin {
 export default defineNuxtConfig({
 	app: {
 		head: {
-			title: 'blog writing@jie',
+			title: 'blog writing@JIE',
 			meta: [
 				{ name: 'viewport', content: 'width=device-width, initial-scale=1' },
 				{ name: 'color-scheme', content: 'light dark' },
@@ -118,7 +118,6 @@ export default defineNuxtConfig({
 						},
 					},
 					'remark-math': {},
-					'remark-reading-time': {},
 					[pluginPath('remark-shuoshuo')]: {},
 				},
 				rehypePlugins: {
@@ -190,7 +189,7 @@ export default defineNuxtConfig({
 
 	hooks: {
 		'ready': () => {
-			console.info(`\n================================\nblog writing@jie · 写作工作台\n================================\n`)
+			console.info(`\n================================\nblog writing@JIE · 写作工作台\n================================\n`)
 		},
 	},
 })

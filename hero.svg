@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" width="1200" height="420" role="img" aria-label="blog writing@jie 写作工作台介绍图">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" width="1200" height="420" role="img" aria-label="blog writing@JIE 写作工作台介绍图">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#f9fbfe"/>
@@ -30,7 +30,7 @@
     <path d="M13 30 L28 24 M12 38 L24 32" stroke="#fff" stroke-width="2" opacity="0.35" stroke-linecap="round"/>
   </g>
 
-  <text x="118" y="92" font-family="system-ui,-apple-system,Segoe UI,Microsoft YaHei,sans-serif" font-size="31" font-weight="700" fill="#0f172a" letter-spacing="-0.5">blog writing@jie</text>
+  <text x="118" y="92" font-family="system-ui,-apple-system,Segoe UI,Microsoft YaHei,sans-serif" font-size="31" font-weight="700" fill="#0f172a" letter-spacing="-0.5">blog writing@JIE</text>
   <text x="62" y="146" font-family="system-ui,-apple-system,Segoe UI,Microsoft YaHei,sans-serif" font-size="16" fill="#334155">为 box.yangjie.site 写的专用写作工作台</text>
   <text x="62" y="172" font-family="system-ui,-apple-system,Segoe UI,Microsoft YaHei,sans-serif" font-size="13" fill="#64748b">左边写 Markdown 与 MDC，右边就是博客文章的样子</text>
 
