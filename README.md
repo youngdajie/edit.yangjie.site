@@ -36,6 +36,8 @@ pnpm build      # 产物 .output（Nitro Node server）
 
 预览依赖 Nitro 的 `parseMarkdown`，部署时按 Nuxt 全栈应用处理（EdgeOne Makers 支持 SSR），不要用 `pnpm generate` 当纯静态站。
 
+`edgeone.json` 里的 `nodeVersion` 必须 ≥ 22.19（平台预装的 `22.21.1` / `24.11.0` 都可用）。低于 22.12 时 pnpm 会跳过 rolldown 的平台原生绑定，安装阶段直接报 `Cannot find native binding` 导致构建失败。
+
 ## 代码库
 
 - CNB：https://cnb.cool/youngdajie/edit.yangjie.site
