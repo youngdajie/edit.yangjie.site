@@ -86,6 +86,7 @@ const currentArticleId = ref('')
 const showPalette = ref(false)
 const paletteQuery = ref('')
 const paletteCursor = ref(0)
+const paletteListRef = ref<HTMLElement | null>(null)
 const showExportDialog = ref(false)
 const exportNameInput = ref('')
 const showAbout = ref(false)
@@ -514,16 +515,29 @@ function openPalette() {
 	showPalette.value = true
 }
 
-function onPaletteKey(e: KeyboardEvent) {
+/** 上下选择后把选中项滚进可视区，否则光标跑到列表下方时用户看不到变化 */
+async function movePaletteCursor(delta: number) {
 	const list = filteredSnippets.value
+	if (!list.length) return
+	paletteCursor.value = (paletteCursor.value + delta + list.length) % list.length
+	await nextTick()
+	paletteListRef.value?.querySelector('.w-palette-item.is-active')?.scrollIntoView({ block: 'nearest' })
+}
+
+function onPaletteKey(e: KeyboardEvent) {
 	if (e.key === 'Escape') { showPalette.value = false; return }
-	if (e.key === 'ArrowDown') { e.preventDefault(); paletteCursor.value = (paletteCursor.value + 1) % Math.max(list.length, 1); return }
-	if (e.key === 'ArrowUp') { e.preventDefault(); paletteCursor.value = (paletteCursor.value - 1 + list.length) % Math.max(list.length, 1); return }
+	if (e.key === 'ArrowDown') { e.preventDefault(); void movePaletteCursor(1); return }
+	if (e.key === 'ArrowUp') { e.preventDefault(); void movePaletteCursor(-1); return }
 	if (e.key === 'Enter' && currentSnippet.value) { e.preventDefault(); insertSnippet(currentSnippet.value) }
 }
 watch(paletteQuery, () => { paletteCursor.value = 0 })
 
 function onGlobalKey(e: KeyboardEvent) {
+	// 组件库打开时统一在全局接管方向键/回车/Esc，焦点不在搜索框也能用
+	if (showPalette.value && ['ArrowDown', 'ArrowUp', 'Enter', 'Escape'].includes(e.key)) {
+		onPaletteKey(e)
+		return
+	}
 	if ((e.ctrlKey || e.metaKey) && e.key === '/') {
 		e.preventDefault()
 		openPalette()
@@ -628,7 +642,6 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 			<span class="w-sep" />
 			<div class="w-doc">
 				<strong class="w-doc-title" :data-tip="displayTitle">{{ displayTitle }}</strong>
-				<span class="w-doc-sub">{{ savedAt ? `已保存 ${savedAt}` : status }}</span>
 			</div>
 
 			<span class="w-spacer" />
@@ -750,7 +763,6 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 			</span>
 			<button class="w-status-btn" data-tip="复制 Markdown" @click="copySource"><Icon name="tabler:clipboard" /></button>
 			<button class="w-status-btn" data-tip="复制正文 HTML" @click="copyHtml"><Icon name="tabler:code" /></button>
-			<span class="is-ok w-hide-mobile"><Icon name="tabler:circle-check" /> 预览与博客同源渲染</span>
 		</footer>
 
 		<!-- ======== 文章库抽屉 ======== -->
@@ -923,14 +935,13 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 						v-model="paletteQuery"
 						autofocus
 						placeholder="搜索 MDC 组件，例如 alert、pics、mermaid"
-						@keydown="onPaletteKey"
 					>
 					<button class="w-palette-esc" data-tip="关闭组件库" @click="showPalette = false">
 						<Icon name="tabler:x" /><span>Esc</span>
 					</button>
 				</div>
 				<div class="w-palette-body">
-					<div class="w-palette-list">
+					<div ref="paletteListRef" class="w-palette-list">
 						<template v-for="group in SNIPPET_GROUPS" :key="group">
 							<h3 v-if="filteredSnippets.some(s => s.group === group)">{{ group }}</h3>
 							<button
@@ -978,6 +989,8 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 					<p class="w-about-lead">
 						左边写 Markdown 与 MDC 组件，右边实时预览成博客文章的样子，预览复用博客同一套 remark/rehype 插件与组件，所见即所得，不是近似渲染
 					</p>
+
+					<p class="w-about-render"><Icon name="tabler:circle-check" /> 预览与博客同源渲染</p>
 
 					<div class="w-about-warning">
 						<Icon name="tabler:alert-triangle" />
