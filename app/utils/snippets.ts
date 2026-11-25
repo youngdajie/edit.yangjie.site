@@ -14,6 +14,10 @@ export interface Snippet {
 	wrap?: [string, string]
 	/** wrap 模式无选区时的示例文字 */
 	fallback?: string
+	/** 冻结：编辑器不渲染这类结构，条目保留仅为说明语法，点击不插入 */
+	frozen?: boolean
+	/** 冻结原因，显示在卡片角标与点击提示里 */
+	frozenNote?: string
 }
 
 /**
@@ -230,9 +234,12 @@ export const SNIPPETS: Snippet[] = [
 		template: '质能方程 $E=mc^2$ 说明$0质量与能量的关系',
 	},
 	{
+		// 冻结：侧栏属于博客页面模板，写作工作台只渲染正文，这里插入不会有任何效果
 		label: '自定义侧栏', group: '布局', icon: 'tabler:layout-sidebar',
 		desc: '往右栏插入自定义内容', syntax: '<meta-aside-名称>',
 		template: '<meta-aside-自定义>\n$0这里的内容会显示在该页右侧栏\n</meta-aside-自定义>',
+		frozen: true,
+		frozenNote: '侧栏由博客页面模板渲染，工作台只渲染正文，插入后预览不会显示',
 	},
 ]
 

@@ -942,7 +942,8 @@
 }
 .w-palette-item {
 	display: grid;
-	grid-template-columns: auto auto 1fr;
+	/* 第 4 列留给「冻结」角标，未冻结的条目没有这个元素，列宽 auto 不影响布局 */
+	grid-template-columns: auto auto 1fr auto;
 	align-items: center;
 	gap: 0.5rem;
 	width: 100%;
@@ -960,6 +961,48 @@
 .w-palette-item:hover { background: var(--ui-raised); }
 .w-palette-item.is-active { background: var(--ui-primary-soft); }
 .w-palette-item.is-active .w-palette-name { font-weight: 700; }
+
+/* 冻结条目：编辑器不渲染这类结构，只保留语法说明 */
+.w-palette-item.is-frozen { cursor: not-allowed; }
+.w-palette-item.is-frozen:hover { background: transparent; }
+.w-palette-item.is-frozen > svg,
+.w-palette-item.is-frozen .w-palette-name,
+.w-palette-item.is-frozen .w-palette-desc { opacity: 0.5; }
+.w-palette-frozen-note {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.3rem;
+	margin: 0.6rem 0 0;
+	padding: 0.5rem 0.6rem;
+	font-size: 0.7rem;
+	line-height: 1.6;
+	color: var(--ui-dim);
+	background: var(--ui-raised);
+	border: 1px dashed var(--ui-border);
+	border-radius: 0.4rem;
+}
+.w-palette-frozen-note > svg { flex: 0 0 auto; margin-top: 0.15rem; color: var(--ui-faint); }
+.w-frozen-tag {
+	display: inline-flex;
+	align-items: center;
+	flex: 0 0 auto;
+	margin-left: 0.35rem;
+	padding: 0.16rem 0.28rem;
+	font-size: 0.6rem;
+	font-weight: 700;
+	line-height: 1;
+	white-space: nowrap;
+	color: var(--ui-faint);
+	background: var(--ui-raised);
+	border: 1px solid var(--ui-border);
+	border-radius: 0.25rem;
+}
+.w-field > input:disabled,
+.w-field > textarea:disabled {
+	opacity: 0.7;
+	cursor: not-allowed;
+	background: var(--ui-raised);
+}
 .w-palette-name { font-size: 0.8rem; font-weight: 600; white-space: nowrap; }
 .w-palette-desc {
 	font-size: 0.7rem;

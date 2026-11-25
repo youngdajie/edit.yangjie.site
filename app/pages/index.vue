@@ -475,6 +475,11 @@ function showToast(message: string) {
 }
 
 function insertSnippet(snippet: Snippet) {
+	// 冻结的片段只保留说明，不往正文里插不可见的结构
+	if (snippet.frozen) {
+		showToast(snippet.frozenNote ?? '该片段在当前编辑器中不可用')
+		return
+	}
 	run((h) => {
 		if (snippet.wrap)
 			h.wrapSelection(snippet.wrap[0], snippet.wrap[1], snippet.fallback ?? '文字')
@@ -921,8 +926,11 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 							<input id="wm-password" v-model="meta.password" type="password" placeholder="留空则不加密" @input="onMetaChange">
 						</div>
 						<div class="w-field">
-							<label for="wm-aside">侧栏组件 <code>aside</code></label>
-							<input id="wm-aside" :value="listText('aside')" placeholder="toc" @change="setList('aside', ($event.target as HTMLInputElement).value)">
+							<label for="wm-aside">侧栏组件 <code>aside</code><span class="w-frozen-tag">冻结</span></label>
+							<input id="wm-aside" :value="listText('aside')" placeholder="toc" disabled>
+							<small class="w-field-note">
+								侧栏由博客页面模板渲染，工作台只负责正文，所以预览里不会体现。此处仅原样保留 frontmatter 里的值以便导出，要调整侧栏请改博客仓库的 <code>blog.config.ts</code>。
+							</small>
 						</div>
 					</section>
 				</div>
@@ -952,13 +960,15 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 								v-for="s in filteredSnippets.filter(x => x.group === group)"
 								:key="s.label"
 								class="w-palette-item"
-								:class="{ 'is-active': currentSnippet?.label === s.label }"
+								:class="{ 'is-active': currentSnippet?.label === s.label, 'is-frozen': s.frozen }"
+								:data-tip="s.frozen ? s.frozenNote : undefined"
 								@mouseenter="paletteCursor = filteredSnippets.indexOf(s)"
 								@click="insertSnippet(s)"
 							>
 								<Icon :name="s.icon" />
 								<span class="w-palette-name">{{ s.label }}</span>
 								<span class="w-palette-desc">{{ s.desc }}</span>
+								<span v-if="s.frozen" class="w-frozen-tag">冻结</span>
 							</button>
 						</template>
 						<p v-if="!filteredSnippets.length" class="w-palette-empty">没有找到相关组件</p>
@@ -971,7 +981,10 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 						<code class="w-palette-syntax">{{ currentSnippet.syntax }}</code>
 						<p class="w-palette-label">将插入</p>
 						<pre class="w-palette-preview">{{ currentSnippet.template.replace('$0', '') }}</pre>
-						<p class="w-palette-hint">点击或回车插入 · ↑↓ 选择 · Esc 关闭</p>
+						<p v-if="currentSnippet.frozen" class="w-palette-frozen-note">
+							<Icon name="tabler:lock" /> {{ currentSnippet.frozenNote }}，此处已冻结，仅供查阅语法
+						</p>
+						<p v-else class="w-palette-hint">点击或回车插入 · ↑↓ 选择 · Esc 关闭</p>
 					</aside>
 				</div>
 			</div>
