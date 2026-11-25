@@ -35,7 +35,7 @@ export function useTooltip() {
 			text.value = value
 			place(el)
 			visible.value = true
-		}, 180)
+		}, 90)
 	}
 
 	function clear() {

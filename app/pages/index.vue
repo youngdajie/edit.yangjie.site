@@ -628,7 +628,7 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 			<span class="w-sep" />
 			<div class="w-doc">
 				<strong class="w-doc-title" :data-tip="displayTitle">{{ displayTitle }}</strong>
-				<span class="w-doc-sub">{{ savedAt ? `已保存 ${savedAt}` : status }}<span class="w-doc-extra"> · {{ wordCount }} 字 · 约 {{ readMinutes }} 分钟</span></span>
+				<span class="w-doc-sub">{{ savedAt ? `已保存 ${savedAt}` : status }}</span>
 			</div>
 
 			<span class="w-spacer" />
@@ -925,7 +925,9 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 						placeholder="搜索 MDC 组件，例如 alert、pics、mermaid"
 						@keydown="onPaletteKey"
 					>
-					<kbd>Esc</kbd>
+					<button class="w-palette-esc" data-tip="关闭组件库" @click="showPalette = false">
+						<Icon name="tabler:x" /><span>Esc</span>
+					</button>
 				</div>
 				<div class="w-palette-body">
 					<div class="w-palette-list">
@@ -974,7 +976,7 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 
 				<div class="w-about-body">
 					<p class="w-about-lead">
-						左边写 Markdown 与 MDC 组件，右边实时预览成博客文章的样子。预览复用博客同一套 remark/rehype 插件与组件，所见即所得，不是近似渲染。
+						左边写 Markdown 与 MDC 组件，右边实时预览成博客文章的样子，预览复用博客同一套 remark/rehype 插件与组件，所见即所得，不是近似渲染
 					</p>
 
 					<div class="w-about-warning">
@@ -982,16 +984,15 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 						<div>
 							<strong>文章不上传云端，只保存在你自己的浏览器里</strong>
 							<p>
-								使用浏览器本地存储（localStorage）自动保存，有容量上限。
-								<b>请不要清除本站缓存 / 站点数据</b>，清除后文章无法恢复。
-								请养成习惯：写完及时点「导出 .md」，把文件放进博客仓库，才算真正安全。
+								使用浏览器本地存储（localStorage）自动保存，有容量上限，
+								<b>请不要清除本站缓存 / 站点数据</b>，清除后文章无法恢复，
+								请养成习惯：写完及时点「导出 .md」，把文件放进博客仓库，才算真正安全
 							</p>
 						</div>
 					</div>
 
 					<dl class="w-about-meta">
-						<div><dt>作者</dt><dd><a href="https://www.yangjie.site" target="_blank" rel="noopener noreferrer">youngdajie <Icon name="tabler:external-link" /></a></dd></div>
-						<div><dt>作者主页</dt><dd><a href="https://www.yangjie.site" target="_blank" rel="noopener noreferrer">www.yangjie.site <Icon name="tabler:external-link" /></a></dd></div>
+						<div><dt>作者</dt><dd><a href="https://www.yangjie.site" target="_blank" rel="noopener noreferrer">youngdajie · www.yangjie.site <Icon name="tabler:external-link" /></a></dd></div>
 						<div><dt>项目地址</dt><dd><a href="https://cnb.cool/youngdajie/edit.yangjie.site" target="_blank" rel="noopener noreferrer">cnb.cool/youngdajie/edit.yangjie.site <Icon name="tabler:external-link" /></a></dd></div>
 						<div><dt>线上站点</dt><dd><a href="https://edit.yangjie.site" target="_blank" rel="noopener noreferrer">edit.yangjie.site <Icon name="tabler:external-link" /></a></dd></div>
 						<div><dt>开源协议</dt><dd>MIT · 启发自 stellar-writing</dd></div>
