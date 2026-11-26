@@ -14,6 +14,8 @@ export interface Snippet {
 	wrap?: [string, string]
 	/** wrap 模式无选区时的示例文字 */
 	fallback?: string
+	/** 用法提醒，显示在详情面板语法下方 */
+	note?: string
 	/** 冻结：编辑器不渲染这类结构，条目保留仅为说明语法，点击不插入 */
 	frozen?: boolean
 	/** 冻结原因，显示在卡片角标与点击提示里 */
@@ -118,6 +120,7 @@ export const SNIPPETS: Snippet[] = [
 		label: '气泡提示', group: '组件', icon: 'tabler:info-circle',
 		desc: '鼠标悬停显示补充说明', syntax: ':tip[文字]{tip="内容"}',
 		template: ':tip[$0悬停这里]{tip="这里是补充说明的内容"}',
+		note: '行内组件前面要留空格，紧跟中文或标点不会被识别',
 	},
 	{
 		label: '折叠块', group: '组件', icon: 'tabler:chevrons-down',
@@ -153,6 +156,7 @@ export const SNIPPETS: Snippet[] = [
 		label: '马赛克', group: '组件', icon: 'tabler:eye-off',
 		desc: '悬停才显示的文字', syntax: ':blur[文字]',
 		template: ':blur[$0这里是被遮住的文字]',
+		note: '行内组件前面要留空格，紧跟中文或标点不会被识别',
 	},
 	{
 		label: '卡片列表', group: '组件', icon: 'tabler:layout-grid',

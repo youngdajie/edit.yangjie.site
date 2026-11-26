@@ -1007,6 +1007,9 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 						</p>
 						<p class="w-palette-label">语法</p>
 						<code class="w-palette-syntax">{{ currentSnippet.syntax }}</code>
+						<p v-if="currentSnippet.note" class="w-palette-note">
+							<Icon name="tabler:info-circle" /> {{ currentSnippet.note }}
+						</p>
 						<p class="w-palette-label">将插入</p>
 						<pre class="w-palette-preview">{{ currentSnippet.template.replace('$0', '') }}</pre>
 						<p v-if="currentSnippet.frozen" class="w-palette-frozen-note">
