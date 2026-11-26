@@ -6,7 +6,7 @@ import { bracketMatching, indentOnInput, HighlightStyle, syntaxHighlighting } fr
 import { highlightSelectionMatches, search, searchKeymap } from '@codemirror/search'
 import { completionKeymap, snippet } from '@codemirror/autocomplete'
 import { EditorState, RangeSetBuilder, type Extension } from '@codemirror/state'
-import { Decoration, drawSelection, dropCursor, EditorView, highlightActiveLine, highlightActiveLineGutter, keymap, lineNumbers, placeholder, ViewPlugin, type DecorationSet, type ViewUpdate } from '@codemirror/view'
+import { Decoration, dropCursor, EditorView, highlightActiveLine, highlightActiveLineGutter, keymap, lineNumbers, placeholder, ViewPlugin, type DecorationSet, type ViewUpdate } from '@codemirror/view'
 import { tags } from '@lezer/highlight'
 
 export interface EditorHandle {
@@ -274,7 +274,6 @@ onMounted(() => {
 		lineNumbers(),
 		highlightActiveLineGutter(),
 		history(),
-		drawSelection(),
 		dropCursor(),
 		indentOnInput(),
 		bracketMatching(),
