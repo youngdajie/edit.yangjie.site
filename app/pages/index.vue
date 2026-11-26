@@ -492,6 +492,35 @@ function insertSnippet(snippet: Snippet) {
 
 // ---------- 滚动同步 ----------
 let syncLock = false
+/** 跟随光标造成的预览滚动，短时间内不要再反向同步回编辑区 */
+let suppressPreviewScrollUntil = 0
+let followTimer: ReturnType<typeof setTimeout> | null = null
+
+/**
+ * 光标所在行的文字 → 预览里的对应段落。
+ * MDC 的 AST 不携带源行号，所以用文本锚点近似定位：
+ * 普通段落取前 12 个字，标题取去掉 # 后的文字，都能稳定命中。
+ */
+function onCursorLine(lineText: string) {
+	if (view.value === 'edit' || !previewHost.value)
+		return
+	if (followTimer) clearTimeout(followTimer)
+	followTimer = setTimeout(() => {
+		const host = previewHost.value
+		if (!host) return
+		const needle = lineText.replace(/^[\s#>*+\-`\d.]+/, '').trim().slice(0, 12).replace(/\s+/g, '')
+		if (needle.length < 2) return
+		const root = host.querySelector('.article')
+		const target = [...(root?.children ?? [])].find(el =>
+			(el.textContent ?? '').replace(/\s+/g, '').includes(needle),
+		)
+		if (!target) return
+		const top = target.getBoundingClientRect().top - host.getBoundingClientRect().top + host.scrollTop - 28
+		suppressPreviewScrollUntil = Date.now() + 450
+		host.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
+	}, 220)
+}
+
 function onEditorScroll(ratio: number) {
 	if (syncLock || view.value === 'edit' || !previewHost.value) return
 	const el = previewHost.value
@@ -502,7 +531,7 @@ function onEditorScroll(ratio: number) {
 	requestAnimationFrame(() => { syncLock = false })
 }
 function onPreviewScroll() {
-	if (syncLock || view.value === 'preview' || !previewHost.value) return
+	if (syncLock || Date.now() < suppressPreviewScrollUntil || view.value === 'preview' || !previewHost.value) return
 	const el = previewHost.value
 	const max = el.scrollHeight - el.clientHeight
 	if (max <= 0) return
@@ -718,6 +747,7 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 					ref="editorRef"
 					v-model="source"
 					@scroll="onEditorScroll"
+					@cursor-line="onCursorLine"
 					@save="saveDraft"
 					@palette="openPalette"
 				/>
@@ -759,13 +789,11 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 			</span>
 			<span class="w-status-sep w-hide-mobile" />
 			<span class="w-hide-mobile">{{ wordCount }} 字 · 约 {{ readMinutes }} 分钟</span>
-			<span class="w-status-sep w-hide-mobile" />
-			<span class="w-hide-mobile">导出为 <code>{{ resolvedFileName }}</code></span>
 			<span class="w-spacer" />
 			<span
 				class="w-storage"
 				:class="{ 'is-warn': storageNearLimit, 'is-full': storageFull }"
-				:data-tip="`文章只存在本浏览器的 localStorage\n已用 ${formatBytes(storageUsed)} / 5 MB（${storagePercent}%）· 不上传云端`"
+				:data-tip="`文章只存在本机浏览器，不上传云端\n已用 ${formatBytes(storageUsed)} / 5 MB（${storagePercent}%）`"
 			>
 				<Icon name="tabler:database" />
 				<span class="w-storage-label">本地 {{ formatBytes(storageUsed) }} / 5 MB</span>
@@ -782,7 +810,7 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 				<header class="w-drawer-head">
 					<div>
 						<h2><Icon name="tabler:books" /> 文章库</h2>
-						<p>文章保存在此浏览器本地，新建不会覆盖旧文章</p>
+						<p>文章只存本机，新建不会覆盖旧的</p>
 					</div>
 					<button class="w-icon-btn" data-tip="关闭" @click="showLibrary = false"><Icon name="tabler:x" /></button>
 				</header>
@@ -824,7 +852,7 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 				<header class="w-drawer-head">
 					<div>
 						<h2><Icon name="tabler:settings" /> 文章设置</h2>
-						<p>对应文章开头的 frontmatter，改动会实时写回源码</p>
+						<p>改这里会实时写回 frontmatter</p>
 					</div>
 					<button class="w-icon-btn" data-tip="关闭" @click="showMeta = false"><Icon name="tabler:x" /></button>
 				</header>
@@ -834,12 +862,12 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 						<div class="w-field">
 							<label for="wm-title">标题 <code>title</code></label>
 							<input id="wm-title" v-model="meta.title" placeholder="我的第一篇文章" @input="onMetaChange">
-							<small>显示在文章页顶部与列表卡片</small>
+							<small>显示在文章页顶部和列表卡片</small>
 						</div>
 						<div class="w-field">
 							<label for="wm-desc">简介 <code>description</code></label>
 							<textarea id="wm-desc" v-model="meta.description" rows="2" placeholder="一句话介绍，会显示在列表和搜索结果里" @input="onMetaChange" />
-							<small>不显示在文章页，用于列表摘要与 SEO</small>
+							<small>列表摘要用，不显示在文章页</small>
 						</div>
 					</section>
 					<section class="w-fieldset">
@@ -856,7 +884,7 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 								>
 								<button class="w-now-btn" data-tip="应用文件名" @click="applyFileName"><Icon name="tabler:check" />应用</button>
 							</div>
-							<small>空格与符号自动转连字符，大小写原样保留；改名后会同步到文章库</small>
+							<small>空格与符号自动转连字符，大小写不变，改名会同步到文章库</small>
 						</div>
 						<div v-if="fileNameCheck.hasForeign" class="w-name-error">
 							<Icon name="tabler:alert-circle" />
@@ -909,7 +937,7 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 								<button class="w-now-btn" data-tip="设为当前时间" @click="setDateNow('updated')"><Icon name="tabler:clock" />现在</button>
 							</div>
 						</div>
-						<small class="w-field-note">点击日期框弹出选择器，写回格式为 YYYY-MM-DD HH:mm:ss</small>
+						<small class="w-field-note">点日期框选时间，写回格式 YYYY-MM-DD HH:mm:ss</small>
 					</section>
 					<section class="w-fieldset">
 						<h3>高级选项</h3>
@@ -929,7 +957,7 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 							<label for="wm-aside">侧栏组件 <code>aside</code><span class="w-frozen-tag">冻结</span></label>
 							<input id="wm-aside" :value="listText('aside')" placeholder="toc" disabled>
 							<small class="w-field-note">
-								侧栏由博客页面模板渲染，工作台只负责正文，所以预览里不会体现。此处仅原样保留 frontmatter 里的值以便导出，要调整侧栏请改博客仓库的 <code>blog.config.ts</code>。
+								侧栏交给博客模板渲染，工作台不预览，这里保留原值供导出，要改请到博客仓库的 <code>blog.config.ts</code>
 							</small>
 						</div>
 					</section>
@@ -982,7 +1010,7 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 						<p class="w-palette-label">将插入</p>
 						<pre class="w-palette-preview">{{ currentSnippet.template.replace('$0', '') }}</pre>
 						<p v-if="currentSnippet.frozen" class="w-palette-frozen-note">
-							<Icon name="tabler:lock" /> {{ currentSnippet.frozenNote }}，此处已冻结，仅供查阅语法
+							<Icon name="tabler:lock" /> {{ currentSnippet.frozenNote }} · 仅供查阅语法
 						</p>
 						<p v-else class="w-palette-hint">点击或回车插入 · ↑↓ 选择 · Esc 关闭</p>
 					</aside>
@@ -1012,12 +1040,11 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 					<div class="w-about-warning">
 						<Icon name="tabler:alert-triangle" />
 						<div>
-							<strong>文章不上传云端，只保存在你自己的浏览器里</strong>
+							<strong>文章不上传云端，只存在这台设备的浏览器里</strong>
 							<p>
-								使用浏览器本地存储（localStorage）自动保存，有容量上限，
-								<b>请不要清除本站缓存 / 站点数据</b>，清除后文章无法恢复，
-								请养成习惯：写完及时点「导出 .md」，把文件放进博客仓库，才算真正安全
+								存的是 localStorage，有容量上限，<b>别清本站缓存和数据</b>，清了就找不回来
 							</p>
+							<p>写完点「导出 .md」，把文件放进博客仓库才算稳</p>
 						</div>
 					</div>
 

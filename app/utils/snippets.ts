@@ -239,7 +239,7 @@ export const SNIPPETS: Snippet[] = [
 		desc: '往右栏插入自定义内容', syntax: '<meta-aside-名称>',
 		template: '<meta-aside-自定义>\n$0这里的内容会显示在该页右侧栏\n</meta-aside-自定义>',
 		frozen: true,
-		frozenNote: '侧栏由博客页面模板渲染，工作台只渲染正文，插入后预览不会显示',
+		frozenNote: '侧栏交给博客模板处理',
 	},
 ]
 

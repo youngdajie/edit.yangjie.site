@@ -30,6 +30,8 @@ const emit = defineEmits<{
 	'update:modelValue': [value: string]
 	/** 编辑器滚动比例（0-1） */
 	scroll: [ratio: number]
+	/** 光标所在行的原文，用于让预览滚动到对应段落 */
+	'cursor-line': [text: string]
 	save: []
 	palette: []
 }>()
@@ -299,6 +301,11 @@ onMounted(() => {
 		EditorView.updateListener.of((u) => {
 			if (u.docChanged)
 				cb.value.emit('update:modelValue', u.state.doc.toString())
+			// 编辑或移动光标时上报当前行，预览据此滚到对应段落
+			if (u.docChanged || u.selectionSet) {
+				const line = u.state.doc.lineAt(u.state.selection.main.head)
+				cb.value.emit('cursor-line', line.text)
+			}
 		}),
 		EditorView.domEventHandlers({
 			scroll: (_event, v) => {
