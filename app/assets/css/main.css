@@ -1,3 +1,8 @@
+/* 全屏写作工作台：滚动交给内部面板，避免全局滚动条出现/消失时页面左移 */
+html, body {
+	height: 100%;
+	overflow: hidden;
+}
 :root {
 	--start: left;
 	--end: right;

@@ -976,7 +976,7 @@ const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300))
 					<input
 						v-model="paletteQuery"
 						autofocus
-						placeholder="搜索 MDC 组件，例如 alert、pics、mermaid"
+						placeholder="搜索 MDC 组件"
 					>
 					<button class="w-palette-esc" data-tip="关闭组件库 (Esc)" @click="showPalette = false">Esc</button>
 				</div>
