@@ -20,9 +20,17 @@ export interface PreviewParseResult {
 	meta: Record<string, unknown>
 }
 
-let parserPromise: Promise<MdcParser> | null = null
-
-/** 解析器初始化有 unified/remark 全套依赖，懒加载并只创建一次 */
+/**
+ * 每次解析都新建一个 processor，不能复用。
+ *
+ * mdc 的 compileHast 是 unified 插件工厂，new Slugger() 在配置处理器时只做一次，
+ * 复用的话 github-slugger 的计数会跨次累积：同一篇文档解析到第 7 次时，
+ * 原本的 `图文与卡片` 会变成 `图文与卡片-6`，点标题就带上这个假后缀。
+ * 博客构建时每篇只解析一次所以没暴露，实时预览会反复解析才会踩到。
+ *
+ * 实测新建一次约 0.65ms（复用 0.22ms），配合 300ms 输入防抖，开销可忽略。
+ * 动态 import 的模块本身有浏览器缓存，不会重复下载。
+ */
 async function createParser(): Promise<MdcParser> {
 	const [
 		{ createMarkdownParser },
@@ -68,16 +76,11 @@ async function createParser(): Promise<MdcParser> {
 	} as never)
 }
 
-function getParser(): Promise<MdcParser> {
-	parserPromise ||= createParser()
-	return parserPromise
-}
-
 /** 把 Markdown 源码解析成 minimark AST，交给 <ContentRenderer> 渲染 */
 export async function parsePreviewMarkdown(source: string): Promise<PreviewParseResult> {
 	if (!source.trim())
 		return { body: { type: 'minimark', value: [] }, meta: {} }
-	const parser = await getParser()
+	const parser = await createParser()
 	const parsed = await parser(source)
 	return { body: parsed.body, meta: parsed.data ?? {} }
 }
