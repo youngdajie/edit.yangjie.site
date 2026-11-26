@@ -165,7 +165,7 @@ export default defineNuxtConfig({
 		fallback: 'light',
 		classSuffix: '',
 		// 默认会在切换瞬间注入 *{transition:none} 造成闪屏，交给自己的 CSS 过渡
-		transition: false,
+		disableTransition: true,
 	},
 
 	nitro: {
